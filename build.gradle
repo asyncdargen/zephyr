@@ -1,0 +1,67 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+
+    id 'org.jetbrains.kotlin.jvm' version '1.8.21'
+    id 'org.jetbrains.kotlin.plugin.allopen' version '1.5.0'
+}
+
+group = 'dev.zephyr'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url 'https://repo.dmulloy2.net/repository/public/' }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT'
+    compileOnly 'org.spigotmc:spigot:1.19.4-R0.1-SNAPSHOT'
+    compileOnly 'com.comphenix.protocol:ProtocolLib:5.0.0'
+}
+
+java {
+    withSourcesJar()
+}
+
+allOpen {
+    annotation('dev.zephyr.util.kotlin.KotlinOpens')
+}
+
+compileKotlin.kotlinOptions {
+    jvmTarget = '17'
+    freeCompilerArgs = [
+            '-Xlambdas=indy',
+            '-Xno-param-assertions',
+            '-Xno-receiver-assertions',
+            '-Xno-call-assertions',
+            '-Xbackend-threads=0',
+            '-Xassertions=always-disable',
+            '-Xuse-fast-jar-file-system',
+            '-Xsam-conversions=indy'
+    ]
+}
+
+tasks.withType(JavaCompile)*.options*.encoding = 'UTF-8'
+
+publishing {
+    repositories {
+        maven {
+            url 'https://repo.starfarm.fun/repository/maven-public-releases'
+            credentials {
+                username System.getenv('SF_REPO_USER')
+                password System.getenv('SF_REPO_PASSWORD')
+            }
+        }
+    }
+
+    publications {
+        maven(MavenPublication) {
+            groupId group
+            artifactId project.name
+            version version
+            from components.java
+        }
+    }
+}
