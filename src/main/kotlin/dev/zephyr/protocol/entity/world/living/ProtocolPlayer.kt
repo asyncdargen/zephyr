@@ -31,6 +31,12 @@ class ProtocolPlayer(val skin: Skin, location: Location) : ProtocolLivingEntity(
     constructor(uuid: UUID, location: Location) : this(Skin.get(uuid), location)
     constructor(location: Location) : this(Skin.Null, location)
 
+    companion object {
+
+        val TitleTranslation = Vector3f(0f, 2f, 0f)
+
+    }
+
     var additionalHearts by metadata.item(15, MetadataType.Float, 0f)
     var score by metadata.item(16, MetadataType.Int, 0)
     var displaySkinParts by metadata.bitMask(17, 0x7F).apply { update(true) }
@@ -48,10 +54,8 @@ class ProtocolPlayer(val skin: Skin, location: Location) : ProtocolLivingEntity(
         visibility = ScoreboardTeamTagVisibility.NEVER
     }
 
-    override var location by observable(location) { _, location -> title.teleport(location.clone().apply { yaw = 0f }) }
-    val title = ProtocolTextDisplay(location).apply {
-        translation = Vector3f(0f, 2f, 0f)
-    }
+    override var location by observable(location) { _, location -> title.teleport(location.clone().apply { pitch = 0f }) }
+    val title = ProtocolTextDisplay(location).apply { translation = TitleTranslation }
 
     override fun sendSpawnPackets(players: Collection<Player>) {
         sendPlayerInfo(PlayerInfoAction.ADD_PLAYER, players)

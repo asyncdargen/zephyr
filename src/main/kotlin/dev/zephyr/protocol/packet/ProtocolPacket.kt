@@ -28,7 +28,7 @@ class ProtocolPacket(type: PacketType, block: ((ProtocolPacket) -> Unit)? = null
         players.forEach { Protocol.ProtocolManager.receiveClientPacket(it, this) }
 
     fun send(players: Collection<Player>) =
-        players.forEach { Protocol.ProtocolManager.sendServerPacket(it, this) }
+        players.forEach { Protocol.ProtocolManager.sendServerPacket(it, this) }.apply { println("$type $players") }
 
     fun send(vararg players: Player) =
         players.forEach { Protocol.ProtocolManager.sendServerPacket(it, this) }

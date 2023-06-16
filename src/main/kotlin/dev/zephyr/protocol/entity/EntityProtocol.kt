@@ -6,8 +6,8 @@ import dev.zephyr.protocol.PacketPlayInType
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.entity.type.EntityInteract
-import dev.zephyr.task.after
-import dev.zephyr.extensions.on
+import dev.zephyr.extensions.bukkit.after
+import dev.zephyr.extensions.bukkit.on
 import dev.zephyr.extensions.concurrentHashMapOf
 import org.bukkit.Chunk
 import org.bukkit.Location

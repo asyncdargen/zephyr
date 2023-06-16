@@ -6,7 +6,7 @@ import dev.zephyr.protocol.entity.metadata.property.BitMaskMetadataObservablePro
 import dev.zephyr.protocol.entity.metadata.property.BooleanBitMaskMetadataObservableProperty
 import dev.zephyr.protocol.entity.metadata.property.MetadataObservableProperty
 import dev.zephyr.util.kotlin.KotlinOpens
-import dev.zephyr.extensions.throwIfNonNull
+import dev.zephyr.extensions.java.throwIfNonNull
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import java.lang.Thread.currentThread
 

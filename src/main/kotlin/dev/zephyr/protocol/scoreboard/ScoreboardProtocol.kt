@@ -1,7 +1,7 @@
 package dev.zephyr.protocol.scoreboard
 
 import dev.zephyr.extensions.concurrentHashMapOf
-import dev.zephyr.extensions.on
+import dev.zephyr.extensions.bukkit.on
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerQuitEvent
 

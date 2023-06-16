@@ -2,10 +2,10 @@ package dev.zephyr.protocol.entity.world.display
 
 import dev.zephyr.protocol.entity.ProtocolEntity
 import dev.zephyr.protocol.entity.data.display.Brightness
-import dev.zephyr.protocol.entity.data.display.interpolation.DisplayCycleInterpolation
-import dev.zephyr.protocol.entity.data.display.interpolation.DisplayDelayedInterpolation
-import dev.zephyr.protocol.entity.data.display.interpolation.DisplayInterpolation
-import dev.zephyr.protocol.entity.data.display.interpolation.DisplaySwitchableInterpolation
+import dev.zephyr.protocol.entity.data.display.DisplayCycleInterpolation
+import dev.zephyr.protocol.entity.data.display.DisplayDelayedInterpolation
+import dev.zephyr.protocol.entity.data.display.DisplayInterpolation
+import dev.zephyr.protocol.entity.data.display.DisplaySwitchableInterpolation
 import dev.zephyr.protocol.entity.metadata.MetadataType
 import dev.zephyr.protocol.entity.type.display.DisplayBillBoard
 import dev.zephyr.util.kotlin.KotlinOpens

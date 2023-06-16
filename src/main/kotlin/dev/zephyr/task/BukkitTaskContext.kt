@@ -13,6 +13,6 @@ class BukkitTaskContext : TaskContext {
 
     override fun close() = tasks.values.forEach(Task::cancel).run { forks.onEach(TaskContext::close).clear() }
 
-    override fun fork(follow: Boolean) = BukkitTaskContext().apply { if (follow) forks.add(this) }
+    override fun fork(follow: Boolean) = BukkitTaskContext().also { if (follow) forks.add(it) }
 
 }

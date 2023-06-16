@@ -1,10 +1,10 @@
-package dev.zephyr.protocol.entity.data.display.interpolation
+package dev.zephyr.protocol.entity.data.display
 
+import dev.zephyr.extensions.bukkit.afterAsync
+import dev.zephyr.extensions.bukkit.everyAsync
 import dev.zephyr.protocol.entity.batch
 import dev.zephyr.protocol.entity.world.display.ProtocolDisplay
 import dev.zephyr.task.Task
-import dev.zephyr.task.afterAsync
-import dev.zephyr.task.everyAsync
 import dev.zephyr.task.onTerminate
 import dev.zephyr.util.collection.SwitchableList
 import dev.zephyr.util.kotlin.KotlinOpens
@@ -131,7 +131,7 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     }
 
     fun createTask() =
-        dev.zephyr.task.after(delay) { process() } onTerminate { afterAsync(duration) { processAfterBlock() } }
+        dev.zephyr.extensions.bukkit.after(delay) { process() } onTerminate { afterAsync(duration) { processAfterBlock() } }
 
 }
 
