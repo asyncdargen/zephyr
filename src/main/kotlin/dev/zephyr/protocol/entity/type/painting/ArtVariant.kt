@@ -1,9 +1,9 @@
 package dev.zephyr.protocol.entity.type.painting
 
+import dev.zephyr.extensions.java.tryAccessAndGet
 import net.minecraft.core.Holder
 import net.minecraft.world.entity.decoration.PaintingVariant
 import net.minecraft.world.entity.decoration.PaintingVariants
-import java.lang.reflect.Field
 
 typealias HolderRecord<T> = Holder.a<T>
 
@@ -39,10 +39,10 @@ enum class ArtVariant {
     WATER,
     FIRE;
 
-    val handle by lazy {
+    val handle: HolderRecord<PaintingVariant> by lazy {
         HolderRecord(
             PaintingVariants::class.java.declaredFields[ordinal]
-                .apply(Field::trySetAccessible)[null] as PaintingVariant
+                .tryAccessAndGet()!!
         )
     }
 }

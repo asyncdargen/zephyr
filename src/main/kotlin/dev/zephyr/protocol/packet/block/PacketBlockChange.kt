@@ -1,0 +1,16 @@
+package dev.zephyr.protocol.packet.block
+
+import com.comphenix.protocol.wrappers.WrappedBlockData
+import dev.zephyr.protocol.PacketPlayOutType
+import dev.zephyr.protocol.packet.ProtocolPacket
+import org.bukkit.Material
+import org.bukkit.block.data.BlockData
+
+class PacketBlockChange : ProtocolPacket(PacketPlayOutType.BLOCK_CHANGE) {
+
+    var position by writer(0, blockPositionModifier)
+
+    var data by writer<BlockData, WrappedBlockData>(0, blockData, WrappedBlockData::createData)
+    var type by writer<Material, WrappedBlockData>(0, blockData, WrappedBlockData::createData)
+
+}

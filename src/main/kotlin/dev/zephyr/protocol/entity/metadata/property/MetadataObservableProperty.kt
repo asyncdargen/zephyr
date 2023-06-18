@@ -2,9 +2,15 @@ package dev.zephyr.protocol.entity.metadata.property
 
 import dev.zephyr.protocol.entity.metadata.Metadata
 import dev.zephyr.protocol.entity.metadata.MetadataType
+import dev.zephyr.protocol.entity.metadata.ObservableMetadata
 import dev.zephyr.util.kotlin.KotlinOpens
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
+
+//todo: make more pretty ;d
+
+internal val Metadata.isMutable
+    get() = this !is ObservableMetadata || !isInContext() || currentContext().batch
 
 //more better then kotlin.ObserverProperty
 interface ObservableProperty<T> : ReadWriteProperty<Any, T> {
@@ -38,7 +44,9 @@ class MetadataObservableProperty<T, V>(
     override fun getValue(thisRef: Any, property: KProperty<*>): T = value
 
     override fun update(value: T) {
-        this.value = value
+        if (metadata.isMutable)
+            this.value = value
+
         metadata[index, type] = mapper.invoke(value)
     }
 
@@ -63,7 +71,8 @@ abstract class BitMaskMetadataObservableProperty<T>(
     override fun getValue(thisRef: Any, property: KProperty<*>): T = value
 
     override fun update(value: T) {
-        this.value = value
+        if (metadata.isMutable)
+            this.value = value
 
         metadata.updateBitMaskProperty(this)
     }

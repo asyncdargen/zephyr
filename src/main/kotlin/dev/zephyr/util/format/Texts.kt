@@ -1,4 +1,4 @@
-package dev.zephyr.util.text
+package dev.zephyr.util.format
 
 import dev.zephyr.extensions.hex
 import dev.zephyr.extensions.java.generateGradient

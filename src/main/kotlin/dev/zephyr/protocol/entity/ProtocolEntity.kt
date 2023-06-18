@@ -2,11 +2,12 @@ package dev.zephyr.protocol.entity
 
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.WrappedChatComponent
+import dev.zephyr.extensions.bukkit.loadedByPlayers
+import dev.zephyr.extensions.ifNotEmpty
 import dev.zephyr.protocol.ProtocolObject
 import dev.zephyr.protocol.entity.metadata.MetadataItem
 import dev.zephyr.protocol.entity.metadata.MetadataType
 import dev.zephyr.protocol.entity.metadata.ObservableMetadata
-import dev.zephyr.protocol.entity.metadata.batch
 import dev.zephyr.protocol.entity.type.EntityInteract
 import dev.zephyr.protocol.packet.entity.*
 import dev.zephyr.protocol.packet.scoreboard.PacketScoreboardTeam
@@ -43,6 +44,7 @@ class ProtocolEntity(
             this(UUID.randomUUID(), type, 0, location)
 
     var clickHandler: (Player, EntityInteract) -> Unit = { _, _ -> }
+    var accessor: (Player) -> Boolean by observable({ true }) { _, _ -> refreshViewers() }
 
     val metadata = ObservableMetadata.create(this)
     val team = ProtocolScoreboardTeam(uuid.toString().replace("-", "").substring(16), uuid.toString())
@@ -69,14 +71,13 @@ class ProtocolEntity(
     var ticksFrozen by metadata.item(7, MetadataType.Int, 0)
     var isOnGround by observable(true) { _, _ -> teleport() }
 
-    var location: Location = location
-        protected set
+    var location by observable(location) { _, _ -> spawnLocal() }
     val chunk by location::chunk
     val world by location::world
 
     init {
         if (EntityProtocol.AutoRegister) {
-            registerEntity()
+            register()
         }
     }
 
@@ -123,20 +124,15 @@ class ProtocolEntity(
     fun sendDestroy(vararg players: Player) =
         sendDestroy(players.toList())
 
-    fun setPrivateCustomName(customName: String, players: Collection<Player>) = PacketEntityMetadata().also {
-        it.entityId = id
-        it.metadataItems = listOf(
-            MetadataType.Boolean.newItem(3, true),
-            MetadataType.ChatComponentOptional.newItem(2, Optional.of(WrappedChatComponent.fromLegacyText(customName)))
-        )
-    }.sendOrSendAll(players)
+    fun setPrivateCustomName(customName: String, players: Collection<Player>) =
+        modifySpecial(players) { this.customName = customName }
 
     fun setPrivateCustomName(customName: String, vararg players: Player) =
         setPrivateCustomName(customName, players.toList())
 
     fun sendVelocity(velocity: Vector, players: Collection<Player>) = PacketEntityVelocity().also {
         it.entityId = id
-        it.velocity= velocity
+        it.velocity = velocity
     }.sendOrSendAll(players)
 
     fun sendVelocity(velocity: Vector, vararg players: Player) =
@@ -157,6 +153,11 @@ class ProtocolEntity(
 
     fun teleport(destinationLocation: Location = location, players: Collection<Player>) {
         if (players.isEmpty()) {
+            if (location.world !== destinationLocation.world)
+                destroy(viewers)
+
+            spawnLocal()
+
             this.location = destinationLocation.clone()
         }
 
@@ -236,14 +237,30 @@ class ProtocolEntity(
         super.remove()
     }
 
-    fun registerEntity() {
+    /*internal bc using register() is better*/
+    internal fun registerEntity() {
         if (!isRegistered()) {
             EntityProtocol.EntitiesMap[id] = this
-            if (isRegistered()) world.players
-                .filter { it.location.distance(location) <= EntityProtocol.ViewDistance }
-                .let(this::spawn)
         }
+
+        spawnLocal()
     }
+
+    fun spawnLocal() {
+        if (isRegistered()) chunk.loadedByPlayers
+            .filter { hasAccess(it) && !isSpawned(it) }
+            .let(this::spawn)
+    }
+
+    fun refreshViewers() {
+        viewers
+            .filterNot { hasAccess(it) }
+            .ifNotEmpty { destroy(it) }
+
+        spawnLocal()
+    }
+
+    fun hasAccess(player: Player) = accessor(player)
 
     fun isRegistered() = this in EntityProtocol
 
@@ -259,6 +276,18 @@ class ProtocolEntity(
 
 fun <E : ProtocolEntity> E.register() = apply { registerEntity() }
 
-infix fun <E : ProtocolEntity> E.onClick(block: (Player, EntityInteract) -> Unit) = apply { clickHandler = block }
+infix fun <E : ProtocolEntity> E.click(block: (Player, EntityInteract) -> Unit) = apply { clickHandler = block }
 
-inline infix fun <E : ProtocolEntity> E.batch(block: E.() -> Unit) = apply { metadata.batch { block(this) } }
+infix fun <E : ProtocolEntity> E.access(block: (Player) -> Boolean) = apply { accessor = block }
+
+inline fun <E : ProtocolEntity> E.modify(batch: Boolean = true, crossinline block: E.() -> Unit) =
+    metadata.modify(batch = batch) { block(this) }
+
+inline fun <E : ProtocolEntity> E.modifySpecial(players: Collection<Player>, crossinline block: E.() -> Unit) =
+    modify(false, block).apply { sendMetadata(items.values, players) }
+
+inline fun <E : ProtocolEntity> E.modifySpecial(vararg players: Player, crossinline block: E.() -> Unit) =
+    modifySpecial(players.toList(), block)
+
+inline fun <E : ProtocolEntity> E.modifyEachViewer(crossinline block: E.(viewer: Player) -> Unit) =
+    viewers.forEach { modifySpecial(it) { block(it) } }

@@ -2,26 +2,24 @@ package dev.zephyr.protocol.entity
 
 import com.comphenix.protocol.wrappers.EnumWrappers.EntityUseAction
 import dev.zephyr.Zephyr
-import dev.zephyr.protocol.PacketPlayInType
-import dev.zephyr.protocol.PacketPlayOutType
-import dev.zephyr.protocol.Protocol
-import dev.zephyr.protocol.entity.type.EntityInteract
 import dev.zephyr.extensions.bukkit.after
+import dev.zephyr.extensions.bukkit.everyAsync
 import dev.zephyr.extensions.bukkit.on
 import dev.zephyr.extensions.concurrentHashMapOf
+import dev.zephyr.protocol.PacketPlayInType
+import dev.zephyr.protocol.Protocol
+import dev.zephyr.protocol.entity.event.PlayerFakeEntityInteractEvent
+import dev.zephyr.protocol.entity.type.EntityInteract
+import dev.zephyr.protocol.world.chunk.PlayerChunkUnloadEvent
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.World
-import org.bukkit.event.player.PlayerChangedWorldEvent
-import org.bukkit.event.player.PlayerQuitEvent
 
 object EntityProtocol {
 
     var AutoRegister = false
     var ViewDistance = 70.0
-//    var AllowedClickDistance = 7.0
 
-    @get:Synchronized
     val EntitiesMap: MutableMap<Int, ProtocolEntity> = concurrentHashMapOf()
     val Entities by EntitiesMap::values
     val EntitiesSequence
@@ -30,7 +28,7 @@ object EntityProtocol {
     init {
         Protocol.onReceive(PacketPlayInType.USE_ENTITY) {
             val entityId = packet.integers.read(0)
-            val entity = EntitiesMap[entityId] ?: return@onReceive
+            val entity = EntitiesMap[entityId]
 
             val actionRaw = packet.enumEntityUseActions.read(0)?.action ?: return@onReceive
             val action = when (actionRaw) {
@@ -39,37 +37,30 @@ object EntityProtocol {
                 else -> return@onReceive
             }
 
-            val distance = player.location.distance(entity.location)
-           /* if (distance > AllowedClickDistance)
-                Zephyr.Logger.warning("Player ${player.name} clicked to protocol entity $entityId with $distance distance!")
-            else */if (!entity.isSpawned(player))
+            PlayerFakeEntityInteractEvent(player, action, entityId, entity).callEvent()
+
+            entity ?: return@onReceive
+            if (!entity.isSpawned(player)) {
                 Zephyr.Logger.warning("Player ${player.name} clicked to protocol entity $entityId not spawned from him!")
-            else after {
+            } else after {
                 entity.clickHandler(player, action)
             }
         }
 
-        Protocol.onSend(PacketPlayOutType.MAP_CHUNK) {
-            val chunkX = packet.integers.read(0)
-            val chunkZ = packet.integers.read(1)
-
-            getEntitiesInChunk(chunkX, chunkZ)
-                .forEach { it.spawn(player) }
-        }
-        Protocol.onSend(PacketPlayOutType.UNLOAD_CHUNK) {
-            val chunkX = packet.integers.read(0)
-            val chunkZ = packet.integers.read(1)
-
-            getEntitiesInChunk(chunkX, chunkZ)
+//        on<PlayerChunkLoadEvent> {
+//            getEntitiesInChunk(chunk)
+//                .filter { it.hasAccess(player) }
+//                .forEach { it.spawn(player) }
+//        }
+        on<PlayerChunkUnloadEvent> {
+            getEntitiesInChunk(chunk)
                 .filter { it.isSpawned(player) }
                 .forEach { it.destroy(player) }
         }
-        on<PlayerChangedWorldEvent> {
-            Entities
-                .filter { it.world !== player.world && it.isSpawned(player) }
-                .forEach { it.destroy(player) }
+
+        everyAsync(2, 2) {
+            EntitiesSequence.forEach(ProtocolEntity::refreshViewers)
         }
-        on<PlayerQuitEvent> { Entities.forEach { it.destroy(player) } }
     }
 
     operator fun contains(id: Int) = isRegistered(id)

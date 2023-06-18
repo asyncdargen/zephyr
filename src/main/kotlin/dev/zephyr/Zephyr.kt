@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dev.zephyr.protocol.entity.EntityProtocol
 import dev.zephyr.protocol.scoreboard.ScoreboardProtocol
+import dev.zephyr.protocol.world.PlayerChunks
 import dev.zephyr.util.java.JLogger
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
@@ -24,6 +25,7 @@ object Zephyr : Listener {
     ) {
         Plugin = plugin
 
+        PlayerChunks
         EntityProtocol
         ScoreboardProtocol
 

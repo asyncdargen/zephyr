@@ -1,14 +1,14 @@
 package dev.zephyr.protocol.entity.metadata
 
+import dev.zephyr.extensions.java.throwIfNonNull
 import dev.zephyr.protocol.entity.ProtocolEntity
 import dev.zephyr.protocol.entity.metadata.property.AnyBitMaskMetadataObservableProperty
 import dev.zephyr.protocol.entity.metadata.property.BitMaskMetadataObservableProperty
 import dev.zephyr.protocol.entity.metadata.property.BooleanBitMaskMetadataObservableProperty
 import dev.zephyr.protocol.entity.metadata.property.MetadataObservableProperty
+import dev.zephyr.util.concurrent.threadLocal
 import dev.zephyr.util.kotlin.KotlinOpens
-import dev.zephyr.extensions.java.throwIfNonNull
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import java.lang.Thread.currentThread
 
 @KotlinOpens
 class Metadata {
@@ -66,16 +66,14 @@ class Metadata {
 
 }
 
-typealias ObservableMetadataContext = MutableMap<Int, MetadataItem<*>>
-
 @KotlinOpens
 class ObservableMetadata(val observer: (Metadata) -> Unit) : Metadata() {
 
-    val contexts: MutableMap<Thread, ObservableMetadataContext> = hashMapOf()
+    val contexts = threadLocal { ObservableMetadataContext() }
 
     override operator fun set(index: Int, item: MetadataItem<*>) {
         if (isInContext()) {
-            currentContext()!![index] = item
+            currentContext()?.items?.set(index, item)
         } else {
             super.set(index, item)
 
@@ -85,7 +83,7 @@ class ObservableMetadata(val observer: (Metadata) -> Unit) : Metadata() {
 
     override fun remove(index: Int) {
         if (isInContext()) {
-            currentContext()!!.remove(index)
+            currentContext()?.items?.remove(index)
         } else {
             super.remove(index)
 
@@ -95,7 +93,7 @@ class ObservableMetadata(val observer: (Metadata) -> Unit) : Metadata() {
 
     override fun clear() {
         if (isInContext()) {
-            currentContext()!!.clear()
+            currentContext()?.items?.clear()
         } else {
             super.clear()
 
@@ -103,9 +101,37 @@ class ObservableMetadata(val observer: (Metadata) -> Unit) : Metadata() {
         }
     }
 
-    fun currentContext() = contexts[currentThread()]
+    fun modify(observable: Boolean = true, batch: Boolean = true, block: (ObservableMetadata) -> Unit): ObservableMetadataContext {
+        val new = !isInContext()
 
-    fun isInContext() = currentThread() in contexts
+        val context = currentContext()
+        context.batch = batch
+
+        val throwable = runCatching(block).exceptionOrNull()
+
+        if (new && context.batch) {
+            contexts.remove()
+            context.items.let(itemsMap::putAll)
+
+            if (observable)
+                observer(this)
+
+            throwable.throwIfNonNull()
+        }
+
+        return context
+    }
+
+    fun isBatchingContext() = !isInContext() || currentContext().batch
+
+    fun currentContext() = contexts.get()
+
+    fun isInContext() = contexts.contains()
+
+    data class ObservableMetadataContext(
+        var batch: Boolean = true,
+        val items: MutableMap<Int, MetadataItem<*>> = hashMapOf(),
+    )
 
     companion object {
 
@@ -115,24 +141,5 @@ class ObservableMetadata(val observer: (Metadata) -> Unit) : Metadata() {
 
     }
 
-}
-
-inline fun ObservableMetadata.batch(observable: Boolean = true, block: (ObservableMetadata) -> Unit) {
-    val thread = currentThread()
-
-    val new = !isInContext()
-    if (new) {
-        hashMapOf<Int, MetadataItem<*>>().also { contexts[thread] = it }
-    }
-
-    val throwable = runCatching(block).exceptionOrNull()
-
-    if (new) {
-        contexts.remove(thread)?.let(itemsMap::putAll)
-        if (observable)
-            observer(this)
-    }
-
-    throwable.throwIfNonNull()
 }
 

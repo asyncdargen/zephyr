@@ -6,6 +6,7 @@ import com.comphenix.protocol.wrappers.WrappedChatComponent
 import com.comphenix.protocol.wrappers.WrappedGameProfile
 import com.comphenix.protocol.wrappers.WrappedSignedProperty
 import com.comphenix.protocol.wrappers.nbt.NbtFactory
+import com.mojang.authlib.GameProfile
 import dev.zephyr.protocol.entity.ProtocolLivingEntity
 import dev.zephyr.protocol.entity.metadata.MetadataType
 import dev.zephyr.protocol.entity.world.display.ProtocolTextDisplay
@@ -17,7 +18,9 @@ import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
-import dev.zephyr.util.minecraft.Skin
+import dev.zephyr.util.minecraft.MinecraftProfile
+import dev.zephyr.util.minecraft.SkinTexture
+import dev.zephyr.util.minecraft.skin
 import org.apache.commons.lang3.RandomStringUtils
 import org.bukkit.Location
 import org.bukkit.entity.EntityType
@@ -26,10 +29,12 @@ import org.joml.Vector3f
 import java.util.*
 
 @KotlinOpens
-class ProtocolPlayer(val skin: Skin, location: Location) : ProtocolLivingEntity(EntityType.PLAYER, location) {
-    constructor(name: String, location: Location) : this(Skin.get(name), location)
-    constructor(uuid: UUID, location: Location) : this(Skin.get(uuid), location)
-    constructor(location: Location) : this(Skin.Null, location)
+class ProtocolPlayer(val skin: SkinTexture?, location: Location) : ProtocolLivingEntity(EntityType.PLAYER, location) {
+    constructor(name: String, location: Location) : this(skin(name), location)
+    constructor(uuid: UUID, location: Location) : this(skin(uuid), location)
+    constructor(profile: MinecraftProfile, location: Location) : this(profile.skin, location)
+    constructor(profile: GameProfile, location: Location) : this(profile.id, location)
+    constructor(location: Location) : this(null, location)
 
     companion object {
 
@@ -46,15 +51,23 @@ class ProtocolPlayer(val skin: Skin, location: Location) : ProtocolLivingEntity(
     var rightShoulderEntityData by metadata.item(20, MetadataType.NBT, NbtFactory.ofCompound("dummy"))
 
     val profile = WrappedGameProfile(uuid, RandomStringUtils.randomAlphanumeric(16)).apply {
-        if (skin != Skin.Null)
-            properties.put("textures", WrappedSignedProperty("textures", skin.texture.value, skin.texture.signature))
+        skin?.let { properties.put("textures", WrappedSignedProperty("textures", it.value, it.signature)) }
     }
     override val team = ProtocolScoreboardTeam(uuid, profile.name).apply {
         collision = ScoreboardTeamCollision.NEVER
         visibility = ScoreboardTeamTagVisibility.NEVER
     }
 
-    override var location by observable(location) { _, location -> title.teleport(location.clone().apply { pitch = 0f }) }
+    override var location by observable(location.clone().apply { pitch = 0f }) { _, location ->
+        title.teleport(location.clone().apply { pitch = 0f })
+    }
+    override var accessor
+        get() = super.accessor
+        set(value) {
+            super.accessor = value
+            title.accessor = value
+        }
+
     val title = ProtocolTextDisplay(location).apply { translation = TitleTranslation }
 
     override fun sendSpawnPackets(players: Collection<Player>) {

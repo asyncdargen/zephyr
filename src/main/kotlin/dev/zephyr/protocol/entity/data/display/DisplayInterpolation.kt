@@ -2,7 +2,7 @@ package dev.zephyr.protocol.entity.data.display
 
 import dev.zephyr.extensions.bukkit.afterAsync
 import dev.zephyr.extensions.bukkit.everyAsync
-import dev.zephyr.protocol.entity.batch
+import dev.zephyr.protocol.entity.modify
 import dev.zephyr.protocol.entity.world.display.ProtocolDisplay
 import dev.zephyr.task.Task
 import dev.zephyr.task.onTerminate
@@ -49,7 +49,7 @@ interface DisplayInterpolation<D : ProtocolDisplay> {
             get() = false
 
         override fun cancel() {
-            throw UnsupportedOperationException()
+
         }
 
         override fun run(): DisplayInterpolation<ProtocolDisplay> {
@@ -103,7 +103,7 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     fun process() {
         timestamp = now()
 
-        entity.batch {
+        entity.modify {
             interpolationDuration = duration
 
             action()
@@ -124,7 +124,7 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     override fun cancel() {
         cancelled = true
         task.cancel()
-        entity.batch {
+        entity.modify {
             interpolationDelay = 0
             interpolationDuration = 0
         }

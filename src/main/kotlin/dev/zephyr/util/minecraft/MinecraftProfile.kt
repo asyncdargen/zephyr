@@ -11,22 +11,22 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-data class Skin(val uuid: UUID, val name: String, val texture: SkinTexture) {
+data class MinecraftProfile(val uuid: UUID, val name: String, val skin: SkinTexture?) {
 
     companion object {
 
-        val Null = Skin(UUID.randomUUID(), "null", SkinTexture(null, null))
+        val Null = MinecraftProfile(UUID.randomUUID(), "null", null)
 
         private val UUID2SkinCache = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.HOURS)
-            .build<UUID, CompletableFuture<Skin>> {
+            .build<UUID, CompletableFuture<MinecraftProfile>> {
                 CompletableFuture.supplyAsync {
                     runCatching {
                         toString(
                             URL("https://sessionserver.mojang.com/session/minecraft/profile/$it?unsigned=false"),
                             Charsets.UTF_8
                         ).run { Zephyr.Gson.fromJson(this, JsonObject::class.java) }.run {
-                            Skin(
+                            MinecraftProfile(
                                 it, get("name").asString,
                                 get("properties").asJsonArray.get(0).asJsonObject.run {
                                     SkinTexture(get("value")?.asString, get("signature")?.asString)
@@ -48,18 +48,26 @@ data class Skin(val uuid: UUID, val name: String, val texture: SkinTexture) {
                 }
             }
 
-        fun getLazy(uuid: UUID): CompletableFuture<Skin> = UUID2SkinCache.get(uuid)
+        fun getLazy(uuid: UUID): CompletableFuture<MinecraftProfile> = UUID2SkinCache.get(uuid)
 
-        fun get(uuid: UUID): Skin = getLazy(uuid).get(8, TimeUnit.SECONDS)
+        fun get(uuid: UUID): MinecraftProfile = getLazy(uuid).get(8, TimeUnit.SECONDS)
 
-        fun getLazy(name: String): CompletableFuture<Skin> = Name2UUIDCache.get(name.lowercase()).thenComposeAsync {
+        fun getLazy(name: String): CompletableFuture<MinecraftProfile> = Name2UUIDCache.get(name.lowercase()).thenComposeAsync {
             it?.let(this::getLazy) ?: CompletableFuture.completedFuture(Null)
         }
 
-        fun get(name: String): Skin = getLazy(name).get(8, TimeUnit.SECONDS)
+        fun get(name: String): MinecraftProfile = getLazy(name).get(8, TimeUnit.SECONDS)
 
     }
 
 }
+
+fun skinLazy(uuid: UUID) = MinecraftProfile.getLazy(uuid).thenApply(MinecraftProfile::skin)
+
+fun skin(uuid: UUID) = skinLazy(uuid).get(8, TimeUnit.SECONDS)
+
+fun skinLazy(name: String) = MinecraftProfile.getLazy(name).thenApply(MinecraftProfile::skin)
+
+fun skin(name: String) = skinLazy(name).get(8, TimeUnit.SECONDS)
 
 data class SkinTexture(val value: String?, val signature: String?)

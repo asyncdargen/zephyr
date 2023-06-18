@@ -6,6 +6,7 @@ import com.comphenix.protocol.wrappers.EnumWrappers.*
 import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry
 import com.comphenix.protocol.wrappers.WrappedDataWatcher.Serializer
 import com.comphenix.protocol.wrappers.nbt.NbtCompound
+import dev.zephyr.protocol.entity.data.villager.VillagerData
 import dev.zephyr.protocol.entity.type.cat.CatVariant
 import dev.zephyr.protocol.entity.type.frog.FrogVariant
 import dev.zephyr.protocol.entity.type.painting.ArtVariant
@@ -44,7 +45,7 @@ class MetadataType<T>(val serializer: Serializer, val converter: ((T) -> Any)? =
         val UUIDOptional = MetadataType<Optional<UUID>>(Registry.getBlockDataSerializer(true))
 
         val NBT = MetadataType<NbtCompound>(Registry.getNBTCompoundSerializer())
-        val VillagerData = MetadataType<WrappedVillagerData>(serializer(WrappedVillagerData.getNmsClass()))
+        val VillagerData = MetadataType<VillagerData>(serializer(WrappedVillagerData.getNmsClass()))
 
         //todo: fix it
 //        val ArtVariant = MetadataType<ArtVariant>(serializer(Holder::class.java))
