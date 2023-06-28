@@ -3,9 +3,11 @@ package dev.zephyr.protocol.packet.block
 import com.comphenix.protocol.wrappers.WrappedBlockData
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.packet.ProtocolPacket
+import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.Material
 import org.bukkit.block.data.BlockData
 
+@KotlinOpens
 class PacketBlockChange : ProtocolPacket(PacketPlayOutType.BLOCK_CHANGE) {
 
     var position by writer(0, blockPositionModifier)

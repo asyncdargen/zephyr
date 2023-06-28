@@ -1,10 +1,12 @@
-package dev.zephyr.protocol.world.chunk
+package dev.zephyr.protocol.world.event.chunk
 
 import dev.zephyr.event.HandlerListHolder
+import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.Chunk
 import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
 
+@KotlinOpens
 class PlayerChunkLoadEvent(player: Player, chunk: Chunk) : PlayerChunkEvent(player, chunk), Cancellable {
     companion object : HandlerListHolder() {
 
@@ -13,9 +15,7 @@ class PlayerChunkLoadEvent(player: Player, chunk: Chunk) : PlayerChunkEvent(play
 
     }
 
-    @get:JvmName("_isCancelled")
-    @set:JvmName("_setCancelled")
-    var isCancelled = false
+    private var isCancelled = false
 
     override fun isCancelled() = isCancelled
 

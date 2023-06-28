@@ -3,6 +3,7 @@ package dev.zephyr.protocol.packet
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.reflect.StructureModifier
+import com.comphenix.protocol.wrappers.WrappedChatComponent
 import com.comphenix.protocol.wrappers.WrappedDataValue
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.entity.metadata.Metadata
@@ -52,7 +53,7 @@ class ProtocolPacket(type: PacketType, block: ((ProtocolPacket) -> Unit)? = null
 
         val VelocityMapper: (Double) -> Int = { it.times(8000).toInt() }
         val AngleMapper: (Float) -> Byte = { it.times(256F).div(360F).toInt().toByte() }
-
+        val ChatComponentMapper: (String) -> WrappedChatComponent = WrappedChatComponent::fromLegacyText
         val MetadataMapper: (Metadata) -> List<WrappedDataValue> = { it.items.toList() }
         val IntListMapper: (Collection<Int>) -> IntList = { IntList.of(*it.toIntArray()) }
 

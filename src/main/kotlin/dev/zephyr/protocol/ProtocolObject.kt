@@ -1,6 +1,6 @@
 package dev.zephyr.protocol
 
-import dev.zephyr.extensions.concurrentSetOf
+import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.protocol.packet.ProtocolPacket
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.entity.Player
@@ -8,7 +8,7 @@ import org.bukkit.entity.Player
 @KotlinOpens
 abstract class ProtocolObject {
 
-    val viewers: MutableSet<Player> = concurrentSetOf()
+    var viewers: MutableSet<Player> = concurrentSetOf()
 
     val hasViewers get() = viewers.isNotEmpty()
 

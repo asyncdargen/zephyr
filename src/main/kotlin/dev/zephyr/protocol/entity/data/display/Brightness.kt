@@ -3,7 +3,7 @@ package dev.zephyr.protocol.entity.data.display
 import dev.zephyr.util.kotlin.KotlinOpens
 
 @KotlinOpens
-class Brightness @JvmOverloads constructor(block: Int = -1, sky: Int = -1) {
+class Brightness(block: Int = -1, sky: Int = -1) {
 
     var blockLight = block.coerceIn(-1..15)
         set(value) {

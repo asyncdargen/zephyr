@@ -1,4 +1,4 @@
-package dev.zephyr.extensions.math
+package dev.zephyr.util.math
 
 import org.bukkit.util.Vector
 import org.joml.Vector3f

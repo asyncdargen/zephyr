@@ -1,6 +1,6 @@
 package dev.zephyr.protocol.entity.type.painting
 
-import dev.zephyr.extensions.java.tryAccessAndGet
+import dev.zephyr.util.java.tryAccessAndGet
 import net.minecraft.core.Holder
 import net.minecraft.world.entity.decoration.PaintingVariant
 import net.minecraft.world.entity.decoration.PaintingVariants

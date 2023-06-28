@@ -20,4 +20,8 @@ class ProtocolTextDisplay(location: Location) : ProtocolDisplay(location, Entity
     var isDefaultBackground by metadata.bitMask(26, 0x04)
     var textAlignment by metadata.bitMask(26, TextDisplayAlignment.CENTER, TextDisplayAlignment::id)
 
+    fun removeBackground() {
+        backgroundColor = 0
+    }
+
 }

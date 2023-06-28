@@ -2,15 +2,15 @@ package dev.zephyr.protocol.entity
 
 import com.comphenix.protocol.wrappers.EnumWrappers.EntityUseAction
 import dev.zephyr.Zephyr
-import dev.zephyr.extensions.bukkit.after
-import dev.zephyr.extensions.bukkit.everyAsync
-import dev.zephyr.extensions.bukkit.on
-import dev.zephyr.extensions.concurrentHashMapOf
 import dev.zephyr.protocol.PacketPlayInType
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.entity.event.PlayerFakeEntityInteractEvent
 import dev.zephyr.protocol.entity.type.EntityInteract
-import dev.zephyr.protocol.world.chunk.PlayerChunkUnloadEvent
+import dev.zephyr.protocol.world.event.chunk.PlayerChunkUnloadEvent
+import dev.zephyr.util.bukkit.after
+import dev.zephyr.util.bukkit.everyAsync
+import dev.zephyr.util.bukkit.on
+import dev.zephyr.util.collection.concurrentHashMapOf
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.World
@@ -18,7 +18,6 @@ import org.bukkit.World
 object EntityProtocol {
 
     var AutoRegister = false
-    var ViewDistance = 70.0
 
     val EntitiesMap: MutableMap<Int, ProtocolEntity> = concurrentHashMapOf()
     val Entities by EntitiesMap::values

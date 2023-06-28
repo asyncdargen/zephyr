@@ -1,4 +1,4 @@
-package dev.zephyr.extensions.bukkit
+package dev.zephyr.util.bukkit
 
 import dev.zephyr.event.GlobalEventContext
 import dev.zephyr.event.on

@@ -1,7 +1,7 @@
 package dev.zephyr.protocol.entity.data.display
 
-import dev.zephyr.extensions.bukkit.afterAsync
-import dev.zephyr.extensions.bukkit.everyAsync
+import dev.zephyr.util.bukkit.afterAsync
+import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.protocol.entity.modify
 import dev.zephyr.protocol.entity.world.display.ProtocolDisplay
 import dev.zephyr.task.Task
@@ -131,7 +131,7 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     }
 
     fun createTask() =
-        dev.zephyr.extensions.bukkit.after(delay) { process() } onTerminate { afterAsync(duration) { processAfterBlock() } }
+        dev.zephyr.util.bukkit.after(delay) { process() } onTerminate { afterAsync(duration) { processAfterBlock() } }
 
 }
 

@@ -16,6 +16,7 @@ import dev.zephyr.protocol.packet.player.PacketPlayerSpawn
 import dev.zephyr.protocol.scoreboard.ProtocolScoreboardTeam
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
+import dev.zephyr.util.bukkit.diff
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
 import dev.zephyr.util.minecraft.MinecraftProfile
@@ -25,7 +26,6 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.bukkit.Location
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
-import org.joml.Vector3f
 import java.util.*
 
 @KotlinOpens
@@ -35,12 +35,6 @@ class ProtocolPlayer(val skin: SkinTexture?, location: Location) : ProtocolLivin
     constructor(profile: MinecraftProfile, location: Location) : this(profile.skin, location)
     constructor(profile: GameProfile, location: Location) : this(profile.id, location)
     constructor(location: Location) : this(null, location)
-
-    companion object {
-
-        val TitleTranslation = Vector3f(0f, 2f, 0f)
-
-    }
 
     var additionalHearts by metadata.item(15, MetadataType.Float, 0f)
     var score by metadata.item(16, MetadataType.Int, 0)
@@ -58,9 +52,7 @@ class ProtocolPlayer(val skin: SkinTexture?, location: Location) : ProtocolLivin
         visibility = ScoreboardTeamTagVisibility.NEVER
     }
 
-    override var location by observable(location.clone().apply { pitch = 0f }) { _, location ->
-        title.teleport(location.clone().apply { pitch = 0f })
-    }
+    override var location by observable(location) { _, location -> title.teleport(location.diff(y = 2, pitch = 0)) }
     override var accessor
         get() = super.accessor
         set(value) {
@@ -68,7 +60,7 @@ class ProtocolPlayer(val skin: SkinTexture?, location: Location) : ProtocolLivin
             title.accessor = value
         }
 
-    val title = ProtocolTextDisplay(location).apply { translation = TitleTranslation }
+    val title = ProtocolTextDisplay(location.diff(y = 2, pitch = 0))
 
     override fun sendSpawnPackets(players: Collection<Player>) {
         sendPlayerInfo(PlayerInfoAction.ADD_PLAYER, players)

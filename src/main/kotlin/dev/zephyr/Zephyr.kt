@@ -6,6 +6,7 @@ import dev.zephyr.protocol.entity.EntityProtocol
 import dev.zephyr.protocol.scoreboard.ScoreboardProtocol
 import dev.zephyr.protocol.world.PlayerChunks
 import dev.zephyr.util.java.JLogger
+import dev.zephyr.util.java.openJavaModules
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -16,6 +17,7 @@ object Zephyr : Listener {
 
     lateinit var Plugin: JavaPlugin
         private set
+    val PluginNamespace by lazy { Plugin.name.lowercase() }
 
     fun initialize(
         plugin: JavaPlugin = Thread.currentThread().stackTrace
@@ -24,6 +26,8 @@ object Zephyr : Listener {
             ?: throw IllegalStateException("Not from plugin context")
     ) {
         Plugin = plugin
+
+        openJavaModules()
 
         PlayerChunks
         EntityProtocol

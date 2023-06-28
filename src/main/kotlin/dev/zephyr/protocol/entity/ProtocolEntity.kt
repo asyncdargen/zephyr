@@ -2,8 +2,6 @@ package dev.zephyr.protocol.entity
 
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.WrappedChatComponent
-import dev.zephyr.extensions.bukkit.loadedByPlayers
-import dev.zephyr.extensions.ifNotEmpty
 import dev.zephyr.protocol.ProtocolObject
 import dev.zephyr.protocol.entity.metadata.MetadataItem
 import dev.zephyr.protocol.entity.metadata.MetadataType
@@ -15,6 +13,8 @@ import dev.zephyr.protocol.scoreboard.ProtocolScoreboardTeam
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamAction
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
+import dev.zephyr.util.bukkit.loadedByPlayers
+import dev.zephyr.util.collection.ifNotEmpty
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
 import org.bukkit.ChatColor
@@ -44,7 +44,7 @@ class ProtocolEntity(
             this(UUID.randomUUID(), type, 0, location)
 
     var clickHandler: (Player, EntityInteract) -> Unit = { _, _ -> }
-    var accessor: (Player) -> Boolean by observable({ true }) { _, _ -> refreshViewers() }
+    var accessor: (Player) -> Boolean = { true }
 
     val metadata = ObservableMetadata.create(this)
     val team = ProtocolScoreboardTeam(uuid.toString().replace("-", "").substring(16), uuid.toString())
@@ -129,6 +129,18 @@ class ProtocolEntity(
 
     fun setPrivateCustomName(customName: String, vararg players: Player) =
         setPrivateCustomName(customName, players.toList())
+
+    fun sendStatus(status: Int, players: Collection<Player>) = PacketEntityStatus().also {
+        it.entityId = id
+        it.status = status.toByte()
+    }.sendOrSendAll(players)
+
+
+    /**
+     https://wiki.vg/Entity_statuses
+     **/
+    fun sendStatus(status: Int, vararg players: Player) =
+        sendStatus(status, players.toList())
 
     fun sendVelocity(velocity: Vector, players: Collection<Player>) = PacketEntityVelocity().also {
         it.entityId = id
@@ -249,13 +261,13 @@ class ProtocolEntity(
     fun spawnLocal() {
         if (isRegistered()) chunk.loadedByPlayers
             .filter { hasAccess(it) && !isSpawned(it) }
-            .let(this::spawn)
+            .ifNotEmpty(this::spawn)
     }
 
     fun refreshViewers() {
         viewers
-            .filterNot { hasAccess(it) }
-            .ifNotEmpty { destroy(it) }
+            .filterNot(this::hasAccess)
+            .ifNotEmpty(this::destroy)
 
         spawnLocal()
     }

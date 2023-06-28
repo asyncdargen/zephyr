@@ -1,6 +1,7 @@
-package dev.zephyr.extensions.bukkit
+package dev.zephyr.util.bukkit
 
 import dev.zephyr.task.GlobalTaskContext
+import dev.zephyr.task.MinecraftTaskProcessor
 import dev.zephyr.task.Task
 
 fun after(handler: (Task) -> Unit) = GlobalTaskContext.after(handler)
@@ -18,3 +19,9 @@ fun everyAsync(delay: Int, period: Int, handler: (Task) -> Unit) = GlobalTaskCon
 fun every(delay: Int, period: Int, periods: Int, handler: (Task) -> Unit) = GlobalTaskContext.every(delay, period, periods, handler)
 
 fun everyAsync(delay: Int, period: Int, periods: Int, handler: (Task) -> Unit) = GlobalTaskContext.everyAsync(delay, period, periods, handler)
+
+fun postToMainThread(task: () -> Unit) = MinecraftTaskProcessor.post(task)
+
+fun <T> postToMainThreadCallback(task: () -> T) = MinecraftTaskProcessor.postCallback(task)
+
+fun postToMainThreadAwait(task: () -> Unit) = MinecraftTaskProcessor.postAwait(task)

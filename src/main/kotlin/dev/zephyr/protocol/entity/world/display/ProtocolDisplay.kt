@@ -1,11 +1,7 @@
 package dev.zephyr.protocol.entity.world.display
 
 import dev.zephyr.protocol.entity.ProtocolEntity
-import dev.zephyr.protocol.entity.data.display.Brightness
-import dev.zephyr.protocol.entity.data.display.DisplayCycleInterpolation
-import dev.zephyr.protocol.entity.data.display.DisplayDelayedInterpolation
-import dev.zephyr.protocol.entity.data.display.DisplayInterpolation
-import dev.zephyr.protocol.entity.data.display.DisplaySwitchableInterpolation
+import dev.zephyr.protocol.entity.data.display.*
 import dev.zephyr.protocol.entity.metadata.MetadataType
 import dev.zephyr.protocol.entity.type.display.DisplayBillBoard
 import dev.zephyr.util.kotlin.KotlinOpens
@@ -49,6 +45,15 @@ class ProtocolDisplay(location: Location, type: EntityType) : ProtocolEntity(typ
         if (runningInterpolation.isRunning) {
             runningInterpolation.cancel()
         }
+    }
+
+    fun removeShadow() {
+        shadowRadius = 0f
+        shadowStrength = 0f
+    }
+
+    fun fullBright() {
+        brightness = Brightness.Max
     }
 
     override fun handleRemove() {

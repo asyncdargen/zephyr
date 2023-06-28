@@ -1,12 +1,12 @@
 package dev.zephyr.protocol.entity.metadata
 
-import dev.zephyr.extensions.java.throwIfNonNull
 import dev.zephyr.protocol.entity.ProtocolEntity
 import dev.zephyr.protocol.entity.metadata.property.AnyBitMaskMetadataObservableProperty
 import dev.zephyr.protocol.entity.metadata.property.BitMaskMetadataObservableProperty
 import dev.zephyr.protocol.entity.metadata.property.BooleanBitMaskMetadataObservableProperty
 import dev.zephyr.protocol.entity.metadata.property.MetadataObservableProperty
 import dev.zephyr.util.concurrent.threadLocal
+import dev.zephyr.util.java.throwIfNonNull
 import dev.zephyr.util.kotlin.KotlinOpens
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 
@@ -128,7 +128,8 @@ class ObservableMetadata(val observer: (Metadata) -> Unit) : Metadata() {
 
     fun isInContext() = contexts.contains()
 
-    data class ObservableMetadataContext(
+    @KotlinOpens
+    class ObservableMetadataContext(
         var batch: Boolean = true,
         val items: MutableMap<Int, MetadataItem<*>> = hashMapOf(),
     )

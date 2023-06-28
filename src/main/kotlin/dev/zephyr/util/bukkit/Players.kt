@@ -1,22 +1,23 @@
-package dev.zephyr.extensions.bukkit
+package dev.zephyr.util.bukkit
 
 import dev.zephyr.protocol.world.PlayerChunks
-import net.md_5.bungee.api.ChatMessageType
-import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.World
+import org.bukkit.craftbukkit.v1_19_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
 
-fun Player.sendOverlay(message: String) = spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent(message))
+fun Player.craft() = this as CraftPlayer
+
+fun Player.sendOverlay(message: String) = sendActionBar(message.toComponent())
 
 fun Player.teleportWithoutRotation(destination: Location) =
     teleport(destination.clone().apply { direction = location.direction })
 
-val Player.chunks
+val Player.loadedChunks
     get() = PlayerChunks[this]
 
-fun Player.isChunkLoaded(chunk: Chunk) = chunk in chunks
+fun Player.isChunkLoaded(chunk: Chunk) = chunk in loadedChunks
 
 fun Player.isChunkLoaded(chunkLocation: Location) = isChunkLoaded(chunkLocation.chunk)
 

@@ -1,7 +1,7 @@
 package dev.zephyr.event
 
 import dev.zephyr.Zephyr
-import dev.zephyr.extensions.bukkit.PluginManager
+import dev.zephyr.util.bukkit.PluginManager
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.event.Event
 import org.bukkit.event.EventPriority

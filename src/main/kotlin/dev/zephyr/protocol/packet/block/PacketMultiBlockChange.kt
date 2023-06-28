@@ -4,9 +4,11 @@ import com.comphenix.protocol.wrappers.BlockPosition
 import com.comphenix.protocol.wrappers.WrappedBlockData
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.packet.ProtocolPacket
+import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.Location
 import org.bukkit.util.Vector
 
+@KotlinOpens
 class PacketMultiBlockChange : ProtocolPacket(PacketPlayOutType.MULTI_BLOCK_CHANGE) {
 
     var section by writer(0, sectionPositions)

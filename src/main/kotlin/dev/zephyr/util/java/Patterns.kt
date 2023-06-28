@@ -1,11 +1,10 @@
-package dev.zephyr.extensions.java
+package dev.zephyr.util.java
 
-import dev.zephyr.extensions.repeatWhile
+import dev.zephyr.util.kotlin.repeatWhile
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 fun String.replaceBy(pattern: Pattern, replacer: (Matcher) -> String) = buildString {
-    val buffer = StringBuffer()
     val matcher = pattern.matcher(this@replaceBy)
 
     matcher.repeatWhile({ it.find() }) {

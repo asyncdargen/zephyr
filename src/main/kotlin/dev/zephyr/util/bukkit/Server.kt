@@ -1,4 +1,4 @@
-package dev.zephyr.extensions.bukkit
+package dev.zephyr.util.bukkit
 
 import net.minecraft.server.MinecraftServer
 import org.bukkit.Bukkit

@@ -3,8 +3,8 @@ package dev.zephyr.util.minecraft
 import com.google.common.cache.CacheBuilder
 import com.google.gson.JsonObject
 import dev.zephyr.Zephyr
-import dev.zephyr.extensions.build
 import dev.zephyr.util.java.uuidFromUnsignedString
+import dev.zephyr.util.kotlin.build
 import org.apache.commons.io.IOUtils.toString
 import java.net.URL
 import java.util.*
@@ -69,5 +69,7 @@ fun skin(uuid: UUID) = skinLazy(uuid).get(8, TimeUnit.SECONDS)
 fun skinLazy(name: String) = MinecraftProfile.getLazy(name).thenApply(MinecraftProfile::skin)
 
 fun skin(name: String) = skinLazy(name).get(8, TimeUnit.SECONDS)
+
+fun skin(value: String?, signature: String?) = SkinTexture(value, signature)
 
 data class SkinTexture(val value: String?, val signature: String?)

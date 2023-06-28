@@ -1,7 +1,7 @@
 package dev.zephyr.task
 
-import dev.zephyr.extensions.concurrentHashMapOf
-import dev.zephyr.extensions.concurrentSetOf
+import dev.zephyr.util.collection.concurrentHashMapOf
+import dev.zephyr.util.collection.concurrentSetOf
 
 class BukkitTaskContext : TaskContext {
 
