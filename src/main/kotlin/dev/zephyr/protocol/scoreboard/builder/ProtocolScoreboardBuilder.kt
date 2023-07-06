@@ -51,7 +51,7 @@ class ProtocolScoreboardBuilder() {
         return ProtocolScoreboard(title).apply {
             val lines = this@ProtocolScoreboardBuilder.lines.run {
                 if (invertIndexes) {
-                    val maxIndex = keys.max()
+                    val maxIndex = keys.maxOrNull() ?: 0
                     mapKeys { (index, _) -> maxIndex - index }
                 } else this
             }

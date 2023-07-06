@@ -1,6 +1,6 @@
 package dev.zephyr.util.shape
 
-import com.comphenix.protocol.wrappers.BlockPosition
+import dev.zephyr.protocol.world.ChunkPointer
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.World
@@ -14,7 +14,7 @@ interface Shape : Iterable<Block> {
     val chunks: Sequence<Chunk>
     val blocks: Sequence<Block>
 
-    val chunksPositionsBlocks: Map<BlockPosition, List<Block>>
+    val chunksPositionsBlocks: Map<ChunkPointer, List<Block>>
     val chunksBlocks: Map<Chunk, List<Block>>
 
     fun contains(world: World, x: Double, y: Double, z: Double): Boolean

@@ -11,20 +11,19 @@ object Protocol {
 
     val ProtocolManager by lazy { ProtocolLibrary.getProtocolManager() }
 
-    fun onReceive(vararg types: PacketType, async: Boolean = false, handler: PacketEvent.() -> Unit) {
-        ProtocolManager.addPacketListener(object : PacketAdapter(
+    fun onReceive(vararg types: PacketType, async: Boolean = false, handler: PacketEvent.() -> Unit) =
+        object : PacketAdapter(
             AdapterParameteters()
-                .connectionSide(ConnectionSide.SERVER_SIDE)
+                .connectionSide(ConnectionSide.CLIENT_SIDE)
                 .plugin(Zephyr.Plugin)
                 .types(*types)
                 .apply { if (async) optionAsync() else optionSync() }
         ) {
             override fun onPacketReceiving(event: PacketEvent) = handler(event)
-        })
-    }
+        }.apply(ProtocolManager::addPacketListener)
 
-    fun onSend(vararg types: PacketType, async: Boolean = false, handler: PacketEvent.() -> Unit) {
-        ProtocolManager.addPacketListener(object : PacketAdapter(
+    fun onSend(vararg types: PacketType, async: Boolean = false, handler: PacketEvent.() -> Unit) =
+        object : PacketAdapter(
             AdapterParameteters()
                 .connectionSide(ConnectionSide.SERVER_SIDE)
                 .plugin(Zephyr.Plugin)
@@ -32,7 +31,6 @@ object Protocol {
                 .apply { if (async) optionAsync() else optionSync() }
         ) {
             override fun onPacketSending(event: PacketEvent) = handler(event)
-        })
-    }
+        }.apply(ProtocolManager::addPacketListener)
 
 }

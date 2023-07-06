@@ -4,9 +4,9 @@ import com.comphenix.protocol.wrappers.BlockPosition
 import com.comphenix.protocol.wrappers.WrappedBlockData
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.packet.ProtocolPacket
+import dev.zephyr.protocol.world.ChunkSection
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.Location
-import org.bukkit.util.Vector
 
 @KotlinOpens
 class PacketMultiBlockChange : ProtocolPacket(PacketPlayOutType.MULTI_BLOCK_CHANGE) {
@@ -15,7 +15,7 @@ class PacketMultiBlockChange : ProtocolPacket(PacketPlayOutType.MULTI_BLOCK_CHAN
     var sectionLocation by writer<Location> {
         section = BlockPosition(it.blockX shr 4, it.blockY shr 4, it.blockZ shr 4)
     }
-    var sectionVector by writer<Vector> { section = BlockPosition(it.blockX shr 4, it.blockY shr 4, it.blockZ shr 4) }
+    var chunkSection by writer<ChunkSection> { section = BlockPosition(it.x, it.y, it.z) }
 
     var blockPositions by writer<Collection<BlockPosition>, ShortArray>(0, shortArrays) {
         it.map { (((it.x and 0xF) shl 8) or ((it.z and 0xF) shl 4) or (it.y and 0xF) shl 0).toShort() }

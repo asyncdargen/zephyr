@@ -14,8 +14,9 @@ object ScoreboardProtocol {
 
     init {
         on<PlayerJoinEvent> {
-            if (ScoreboardProtocol::BoundedScoreboard.isInitialized)
+            if (this@ScoreboardProtocol::BoundedScoreboard.isInitialized) {
                 BoundedScoreboard.create(player)
+            }
         }
         on<PlayerQuitEvent> { remove(player) }
     }

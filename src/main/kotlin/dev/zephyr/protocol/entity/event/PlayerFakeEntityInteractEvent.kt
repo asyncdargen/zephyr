@@ -11,7 +11,7 @@ import org.bukkit.event.player.PlayerEvent
 class PlayerFakeEntityInteractEvent(
     player: Player, val type: EntityInteract,
     val entityId: Int, val entity: ProtocolEntity?
-) : PlayerEvent(player, true) {
+) : PlayerEvent(player) {
 
     companion object : HandlerListHolder() {
 

@@ -26,6 +26,8 @@ fun Location.diff(
     yaw, pitch
 )
 
+fun Location.block() = at(x.toInt(), y.toInt(), z.toInt())
+
 fun Location.getNearEntities(radius: Number) =
     world.getNearbyEntities(this, radius.toDouble(), radius.toDouble(), radius.toDouble())
         .asSequence()
@@ -39,4 +41,4 @@ infix fun Location.distanceTo(location: Location) =
 
 fun Location.direction(to: Location) = subtract(to).direction
 
-fun Location.clearAngles() = apply { yaw = 0f; pitch = 0f; }
+fun Location.clearAngles() = diff(yaw = 0, pitch = 0)

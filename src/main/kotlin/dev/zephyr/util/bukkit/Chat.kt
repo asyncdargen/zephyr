@@ -3,9 +3,10 @@ package dev.zephyr.util.bukkit
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.md_5.bungee.api.chat.TextComponent
 
-fun Collection<String>.toComponents() = map(String::toComponent)
+fun Collection<String>.toComponentList() = map(String::toComponent)
 
 fun String?.toComponent() = this?.let { component ->
     TextComponent.fromLegacyText(component)
@@ -24,3 +25,8 @@ fun String?.toComponent() = this?.let { component ->
         .toTypedArray()
         .let(Component::textOfChildren)
 } ?: Component.empty()
+
+fun Collection<Component>.toTextList() = map(Component::toText)
+
+fun Component.toText() =
+    LegacyComponentSerializer.legacySection().serialize(this)

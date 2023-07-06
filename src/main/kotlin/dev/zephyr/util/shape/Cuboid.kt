@@ -1,6 +1,7 @@
 package dev.zephyr.util.shape
 
-import com.comphenix.protocol.wrappers.BlockPosition
+import dev.zephyr.protocol.getChunkSectionPointer
+import dev.zephyr.protocol.world.ChunkPointer
 import dev.zephyr.util.bukkit.at
 import dev.zephyr.util.bukkit.getBlock
 import dev.zephyr.util.kotlin.KotlinOpens
@@ -45,8 +46,8 @@ class Cuboid(override val world: World, val minPoint: Vector, val maxPoint: Vect
     override val blocks: Sequence<Block>
         get() = asSequence()
 
-    override val chunksPositionsBlocks: Map<BlockPosition, List<Block>>
-        get() = blocks.groupBy { BlockPosition(it.x shr 4, it.x shr 4, it.x shr 4) }
+    override val chunksPositionsBlocks: Map<ChunkPointer, List<Block>>
+        get() = blocks.groupBy(Block::getChunkSectionPointer)
     override val chunksBlocks: Map<Chunk, List<Block>>
         get() = blocks.groupBy(Block::getChunk)
 

@@ -5,4 +5,4 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolZombifiedPiglin(location: Location) : ProtocolZombie(EntityType.ZOMBIFIED_PIGLIN, location)
+class ProtocolZombifiedPiglin(location: Location) : ProtocolZombie(location, EntityType.ZOMBIFIED_PIGLIN)

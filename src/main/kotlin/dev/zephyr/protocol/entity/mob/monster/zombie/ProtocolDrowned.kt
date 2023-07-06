@@ -5,4 +5,4 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolDrowned(location: Location) : ProtocolZombie(EntityType.DROWNED, location)
+class ProtocolDrowned(location: Location) : ProtocolZombie(location, EntityType.DROWNED)

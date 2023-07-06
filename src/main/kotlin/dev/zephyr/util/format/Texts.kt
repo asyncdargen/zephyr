@@ -9,15 +9,14 @@ import kotlin.math.ceil
 
 val HexColorPattern = Pattern.compile("§#([a-fA-F0-9]{6})")
 
-fun String.gradient(gradient: Gradient, style: String = "") =
-    gradient.apply(this, style)
-
 fun String.gradient(vararg colors: Int, style: String = "", first: Boolean = true): String {
     val style = style.colored()
     val chunkSize = ceil((length / (colors.size - 1).toDouble())).toInt()
 
     return if (chunkSize == length) {
-        gradient(createGradient(colors[0], colors[1], length, if (first) 0 else 1).apply(this, style))
+        createGradient(colors[0], colors[1], length, if (first) 0 else 1).joinToStringIndexed("") { index, color ->
+            "${color.hexColor()}$style${this[index]}"
+        }
     } else chunked(chunkSize).joinToStringIndexed("") { index, chunk ->
         chunk.gradient(colors[index], colors[index + 1], style = style, first = index == 0)
     }

@@ -12,6 +12,7 @@ class PacketBlockChange : ProtocolPacket(PacketPlayOutType.BLOCK_CHANGE) {
 
     var position by writer(0, blockPositionModifier)
 
+    var wrappedData by writer(0, blockData)
     var data by writer<BlockData, WrappedBlockData>(0, blockData, WrappedBlockData::createData)
     var type by writer<Material, WrappedBlockData>(0, blockData, WrappedBlockData::createData)
 

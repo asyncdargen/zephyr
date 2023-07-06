@@ -5,4 +5,4 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolHusk(location: Location) : ProtocolZombie(EntityType.HUSK, location)
+class ProtocolHusk(location: Location) : ProtocolZombie(location, EntityType.HUSK)

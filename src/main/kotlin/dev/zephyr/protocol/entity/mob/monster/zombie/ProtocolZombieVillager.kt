@@ -7,7 +7,7 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolZombieVillager(location: Location) : ProtocolZombie(EntityType.ZOMBIE_VILLAGER, location) {
+class ProtocolZombieVillager(location: Location) : ProtocolZombie(location, EntityType.ZOMBIE_VILLAGER) {
 
     var isConverting by metadata.item(19, MetadataType.Boolean, false)
     var villagerData by metadata.item(20, MetadataType.VillagerData, VillagerData.Default)

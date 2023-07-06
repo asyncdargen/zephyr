@@ -7,10 +7,10 @@ import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.entity.event.PlayerFakeEntityInteractEvent
 import dev.zephyr.protocol.entity.type.EntityInteract
 import dev.zephyr.protocol.world.event.chunk.PlayerChunkUnloadEvent
-import dev.zephyr.util.bukkit.after
 import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.util.bukkit.on
 import dev.zephyr.util.collection.concurrentHashMapOf
+import dev.zephyr.util.time.checkOrSetDelay
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.World
@@ -32,8 +32,7 @@ object EntityProtocol {
             val actionRaw = packet.enumEntityUseActions.read(0)?.action ?: return@onReceive
             val action = when (actionRaw) {
                 EntityUseAction.ATTACK -> EntityInteract.ATTACK
-                EntityUseAction.INTERACT -> EntityInteract.INTERACT
-                else -> return@onReceive
+                else -> EntityInteract.INTERACT
             }
 
             PlayerFakeEntityInteractEvent(player, action, entityId, entity).callEvent()
@@ -41,7 +40,7 @@ object EntityProtocol {
             entity ?: return@onReceive
             if (!entity.isSpawned(player)) {
                 Zephyr.Logger.warning("Player ${player.name} clicked to protocol entity $entityId not spawned from him!")
-            } else after {
+            } else if (!checkOrSetDelay("${entityId}_${player.name}_click", 30)) {
                 entity.clickHandler(player, action)
             }
         }

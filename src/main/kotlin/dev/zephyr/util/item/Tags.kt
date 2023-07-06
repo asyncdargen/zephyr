@@ -2,7 +2,6 @@ package dev.zephyr.util.item
 
 import dev.zephyr.util.bukkit.namespaceKey
 import dev.zephyr.util.item.tag.ItemTagTypeMatcher
-import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
@@ -11,7 +10,7 @@ import org.bukkit.persistence.PersistentDataType
 typealias TagType<T> = PersistentDataType<*, T>
 
 fun <T> ItemStack.tag(key: NamespacedKey, type: TagType<T>) =
-    itemMeta.persistentDataContainer[key, type]
+    meta()?.persistentDataContainer?.get(key, type)
 
 fun <T> ItemStack.tag(key: String, type: TagType<T>) =
     tag(namespaceKey(key), type)
@@ -29,6 +28,10 @@ fun <T> ItemStack.tag(key: NamespacedKey, value: T?) = meta {
 
 fun <T> ItemStack.tag(key: String, value: T?) =
     tag(namespaceKey(key), value)
+
+fun ItemStack.tags(tags: Map<String, Any?>) = tags.forEach(this::tag)
+
+fun ItemStack.tags(vararg tags: Pair<String, Any?>) = tags(tags.toMap())
 
 operator fun <T> ItemStack.get(key: NamespacedKey, type: TagType<T>) =
     tag(key, type)
@@ -59,3 +62,6 @@ operator fun ItemStack.contains(key: NamespacedKey) =
 
 operator fun ItemStack.contains(key: String) =
     contains(namespaceKey(key))
+
+operator fun ItemStack.contains(key: Pair<String, TagType<*>>) =
+    containsTag(key.first, key.second)
