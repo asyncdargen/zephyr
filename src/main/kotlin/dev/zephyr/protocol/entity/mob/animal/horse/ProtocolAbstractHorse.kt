@@ -8,7 +8,7 @@ import org.bukkit.entity.EntityType
 @KotlinOpens
 class ProtocolAbstractHorse(type: EntityType, location: Location) : ProtocolAnimal(type, location) {
 
-    var isTame by metadata.bitMask(17, 0x02)
+    var isTamed by metadata.bitMask(17, 0x02)
     var isSaddled by metadata.bitMask(17, 0x04)
     var hasBred by metadata.bitMask(17, 0x08)
     var isEating by metadata.bitMask(17, 0x10)

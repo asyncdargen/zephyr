@@ -3,6 +3,7 @@ package dev.zephyr.protocol
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.reflect.StructureModifier
 import com.comphenix.protocol.wrappers.BlockPosition
+import com.comphenix.protocol.wrappers.WrappedBlockData
 import dev.zephyr.protocol.world.ChunkPointer
 import dev.zephyr.protocol.world.ChunkSection
 import dev.zephyr.util.bukkit.at
@@ -10,6 +11,7 @@ import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.World
 import org.bukkit.block.Block
+import org.bukkit.block.data.BlockData
 
 typealias PacketPlayOutType = PacketType.Play.Server
 typealias PacketPlayInType = PacketType.Play.Client
@@ -43,3 +45,5 @@ fun Chunk.asChunkPointer() = world.chunkPointer(x, z)
 fun Chunk.asChunkSectionPointer(y: Int) = world.chunkPointer(x, y, z)
 
 fun Chunk.asChunkSection() = ChunkSection(x, z)
+
+fun BlockData.wrapped() = WrappedBlockData.createData(this)

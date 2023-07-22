@@ -10,6 +10,6 @@ enum class FrogVariant {
     WARM,
     COLD;
 
-    val handle by lazy { BuiltInRegistries.aj.a(CraftNamespacedKey.toMinecraft(NamespacedKey.minecraft(name))) }
+    val handle by lazy { BuiltInRegistries.aj.a(CraftNamespacedKey.toMinecraft(NamespacedKey.minecraft(name.lowercase()))) }
 
 }

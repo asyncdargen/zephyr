@@ -13,11 +13,18 @@ import kotlin.properties.ReadWriteProperty
 
 @KotlinOpens
 class ProtocolScoreboardTeam(val name: String, entities: List<String>) : ProtocolObject() {
+    constructor(uuid: UUID, entities: List<String>) : this(uuid.asId(), entities)
     constructor(name: String, vararg entities: String) : this(name, entities.toList())
-    constructor(uuid: UUID, vararg entities: String) : this(
-        uuid.toString().replace("-", "").substring(16),
-        entities.toList()
-    )
+    constructor(uuid: UUID, vararg entities: String) : this(uuid.asId(), entities.toList())
+    constructor(name: String, entitiesUUIDs: Collection<UUID>) : this(name, entitiesUUIDs.map(UUID::toString))
+    constructor(uuid: UUID, entitiesUUIDs: Collection<UUID>) : this(uuid.asId(), entitiesUUIDs.map(UUID::toString))
+    constructor(name: String, vararg entitiesUUIDs: UUID) : this(name, entitiesUUIDs.map(UUID::toString))
+    constructor(uuid: UUID, vararg entitiesUUIDs: UUID) : this(uuid.asId(), entitiesUUIDs.map(UUID::toString))
+
+    companion object {
+        protected fun UUID.asId() = toString().replace("-", "").substring(16)
+
+    }
 
     val entities: MutableList<String> = entities.toMutableList() //todo: make observable list
 

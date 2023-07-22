@@ -1,4 +1,4 @@
-package dev.zephyr.protocol.packet.entity
+package dev.zephyr.protocol.packet.entity.move
 
 import dev.zephyr.protocol.packet.ProtocolPacket
 import dev.zephyr.protocol.PacketPlayOutType

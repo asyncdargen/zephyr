@@ -9,17 +9,21 @@ import dev.zephyr.protocol.entity.metadata.MetadataType
 import dev.zephyr.protocol.entity.metadata.ObservableMetadata
 import dev.zephyr.protocol.entity.type.EntityInteract
 import dev.zephyr.protocol.packet.entity.*
+import dev.zephyr.protocol.packet.entity.move.*
 import dev.zephyr.protocol.packet.scoreboard.PacketScoreboardTeam
 import dev.zephyr.protocol.scoreboard.ProtocolScoreboardTeam
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamAction
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
+import dev.zephyr.util.bukkit.boundingBox
+import dev.zephyr.util.bukkit.clearAngles
 import dev.zephyr.util.bukkit.loadedByPlayers
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.collection.ifNotEmpty
 import dev.zephyr.util.collection.observe
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
+import dev.zephyr.util.time.hasDelay
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.entity.EntityType
@@ -31,10 +35,11 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @KotlinOpens
 class ProtocolEntity(
-    val id: Int, val uuid: UUID,
+    var entityId: Int, val uuid: UUID,
     val type: EntityType, val spawnData: Int,
     location: Location
-) : ProtocolObject() {
+) : ProtocolObject(), ProtocolVehicle {
+
     constructor(uuid: UUID, type: EntityType, spawnData: Int, location: Location) :
             this(nextEntityId(), uuid, type, spawnData, location)
 
@@ -50,9 +55,10 @@ class ProtocolEntity(
     var clickHandler: (Player, EntityInteract) -> Unit = { _, _ -> }
     var accessor: (Player) -> Boolean = { true }
 
-    val effects = concurrentSetOf<ProtocolEntityEffect>().observe({ it.add(id, viewers) }, { it.remove(id, viewers) })
-    val mounts = mutableSetOf<ProtocolEntity>()
-    var vehicle: ProtocolEntity? = null
+    val effects =
+        concurrentSetOf<ProtocolEntityEffect>().observe({ it.add(entityId, viewers) }, { it.remove(entityId, viewers) })
+    override val mounts = mutableSetOf<ProtocolEntity>()
+    var vehicle: ProtocolVehicle? = null
 
     val metadata = ObservableMetadata.create(this)
     val team = ProtocolScoreboardTeam(uuid.toString().replace("-", "").substring(16), uuid.toString())
@@ -77,12 +83,14 @@ class ProtocolEntity(
     var isNoGravity by metadata.item(5, MetadataType.Boolean, false)
     var pose by metadata.item(6, MetadataType.Pose, EnumWrappers.EntityPose.STANDING)
     var ticksFrozen by metadata.item(7, MetadataType.Int, 0)
-    var isOnGround by observable(true) { _, _ -> teleport() }
+    var isOnGround = true
 
+    val boundingBox get() = type.boundingBox
+    val positionBox get() = boundingBox.shift(location)
     var location by observable(location) { _, _ -> spawnLocal() }
     val chunkPointer get() = location.asChunkPointer()
-    val chunk by location::chunk
-    val world by location::world
+    val chunk get() = location.chunk
+    val world get() = location.world
 
     init {
         if (EntityProtocol.AutoRegister) {
@@ -101,12 +109,12 @@ class ProtocolEntity(
         sendMetadata(players = players)
 
         sendEffects(players = players)
-        sendMount(players = players)
-        vehicle?.sendMount(players = players)
+        sendMounts(players = players)
+        vehicle?.sendMounts(players = players)
     }
 
     fun sendSpawn(players: Collection<Player>) = PacketEntitySpawn().also {
-        it.entityId = id
+        it.entityId = entityId
         it.entityUUID = uuid
 
         it.entityType = type
@@ -131,7 +139,7 @@ class ProtocolEntity(
     }
 
     fun sendDestroy(players: Collection<Player>) = PacketEntityDestroy().also {
-        it.entitiesIds = listOf(id)
+        it.entitiesIds = listOf(entityId)
     }.sendOrSendAll(players)
 
     fun sendDestroy(vararg players: Player) =
@@ -144,7 +152,7 @@ class ProtocolEntity(
         setPrivateCustomName(customName, players.toList())
 
     fun sendStatus(status: Int, players: Collection<Player>) = PacketEntityStatus().also {
-        it.entityId = id
+        it.entityId = entityId
         it.status = status.toByte()
     }.sendOrSendAll(players)
 
@@ -156,19 +164,63 @@ class ProtocolEntity(
         sendStatus(status, players.toList())
 
     fun sendEffects(effects: Collection<ProtocolEntityEffect> = this.effects, players: Collection<Player>) =
-        effects.forEach { it.add(id, players) }
+        effects.forEach { it.add(entityId, players) }
 
     fun sendEffects(effects: Collection<ProtocolEntityEffect> = this.effects, vararg players: Player) =
         sendEffects(effects, players.toList())
 
     fun sendRemoveEffects(effects: Collection<ProtocolEntityEffect> = this.effects, players: Collection<Player>) =
-        effects.forEach { it.remove(id, players) }
+        effects.forEach { it.remove(entityId, players) }
 
     fun sendRemoveEffects(effects: Collection<ProtocolEntityEffect> = this.effects, vararg players: Player) =
         sendRemoveEffects(effects, players.toList())
 
+    fun sendMove(vector: Vector, players: Collection<Player>) = PacketEntityMove().also {
+        it.entityId = entityId
+        it.motion = vector
+        it.isOnGround = isOnGround
+    }.sendOrSendAll(players)
+
+    fun sendMove(vector: Vector, vararg players: Player) =
+        sendMove(vector, players.toList())
+
+    fun move(vector: Vector, players: Collection<Player>) {
+        if (players.isEmpty()) {
+            location = location.add(vector)
+        }
+
+        sendMove(vector, players)
+    }
+
+    fun move(vector: Vector, vararg players: Player) =
+        move(vector, players.toList())
+
+    fun sendMove(vector: Vector, yaw: Float, pitch: Float, players: Collection<Player>) = PacketEntityMoveLook().also {
+        it.entityId = entityId
+        it.motion = vector
+        it.yaw = yaw
+        it.pitch = pitch
+        it.isOnGround = isOnGround
+    }.sendOrSendAll(players)
+
+    fun sendMove(vector: Vector, yaw: Float, pitch: Float, vararg players: Player) =
+        sendMove(vector, yaw, pitch, players.toList())
+
+    fun move(vector: Vector, yaw: Float, pitch: Float, players: Collection<Player>) {
+        if (players.isEmpty()) {
+            location.yaw = yaw
+            location.pitch = pitch
+            location = location.add(vector)
+        }
+
+        sendMove(vector, yaw, pitch, players)
+    }
+
+    fun move(vector: Vector, yaw: Float, pitch: Float, vararg players: Player) =
+        move(vector, yaw, pitch, players.toList())
+
     fun sendVelocity(velocity: Vector, players: Collection<Player>) = PacketEntityVelocity().also {
-        it.entityId = id
+        it.entityId = entityId
         it.velocity = velocity
     }.sendOrSendAll(players)
 
@@ -178,9 +230,9 @@ class ProtocolEntity(
 
     fun sendTeleport(destinationLocation: Location = location, players: Collection<Player>) {
         sendLook(players = players)
-        sendMount(players = players)
+        sendMounts(players = players)
         PacketEntityTeleport().also {
-            it.entityId = id
+            it.entityId = entityId
             it.location = destinationLocation
             it.isOnGround = isOnGround
         }.sendOrSendAll(viewers)
@@ -205,25 +257,31 @@ class ProtocolEntity(
     fun teleport(destinationLocation: Location = location, vararg players: Player) =
         teleport(destinationLocation, players.toList())
 
-    fun sendMount(mounts: List<Int> = this.mounts.map(ProtocolEntity::id), players: Collection<Player>) =
+    override fun sendMounts(players: Collection<Player>) =
         PacketEntityMount().also {
-            it.entityId = id
-            it.entities = mounts.toIntArray()
+            it.entityId = entityId
+            it.entities = this.mounts.map(ProtocolEntity::entityId).toIntArray()
         }.sendOrSendAll(players)
 
-    fun sendMount(mounts: List<Int> = this.mounts.map(ProtocolEntity::id), vararg players: Player) =
-        sendMount(mounts, players.toList())
+    fun sendMounts(vararg players: Player) =
+        sendMounts(players.toList())
 
-    fun mount(vararg entities: ProtocolEntity) = apply {
+    override fun mount(entities: Collection<ProtocolEntity>) {
         entities.forEach { it.vehicle = this }
         mounts.addAll(entities)
         syncMounts()
+        sendMounts()
     }
 
-    fun unmount(vararg entities: ProtocolEntity) = apply {
+    override fun unmount(entities: Collection<ProtocolEntity>) {
         entities.forEach { it.vehicle = null }
         mounts.removeAll(entities.toSet())
         syncMounts()
+        sendMounts()
+    }
+
+    override fun syncMounts() {
+        mounts.forEach { it.location = location.clearAngles() }
     }
 
     fun effect(vararg effects: ProtocolEntityEffect) = apply { this@ProtocolEntity.effects.addAll(effects) }
@@ -233,18 +291,13 @@ class ProtocolEntity(
     fun removeEffects(vararg effectsTypes: PotionEffectType) =
         removeEffects(*effectsTypes.mapNotNull { type -> effects.firstOrNull { it.type == type } }.toTypedArray())
 
-    fun syncMounts() {
-        mounts.forEach { it.location = location }
-        sendMount()
-    }
-
     fun sendLook(yaw: Float = location.yaw, pitch: Float = location.pitch, players: Collection<Player>) {
         PacketEntityHeadRotation().also {
-            it.entityId = id
+            it.entityId = entityId
             it.rotationHeadYaw = yaw
         }.sendOrSendAll(players)
         PacketEntityLook().also {
-            it.entityId = id
+            it.entityId = entityId
             it.rotationYaw = yaw
             it.rotationPitch = pitch
         }.sendOrSendAll(players)
@@ -296,7 +349,7 @@ class ProtocolEntity(
 
     fun sendMetadata(items: Collection<MetadataItem<*>> = metadata.items, players: Collection<Player>) =
         PacketEntityMetadata().also {
-            it.entityId = id
+            it.entityId = entityId
             it.metadataItems = items.toList()
         }.sendOrSendAll(players)
 
@@ -306,14 +359,14 @@ class ProtocolEntity(
     override fun remove() {
         unmount(*mounts.toTypedArray())
         vehicle?.unmount(this)
-        EntityProtocol.EntitiesMap.remove(id)
+        EntityProtocol.EntitiesMap.remove(entityId)
         super.remove()
     }
 
     /*internal bc using register() is better*/
     internal fun registerEntity() {
         if (!isRegistered()) {
-            EntityProtocol.EntitiesMap[id] = this
+            EntityProtocol.EntitiesMap[entityId] = this
         }
 
         spawnLocal()
@@ -321,7 +374,7 @@ class ProtocolEntity(
 
     fun spawnLocal() {
         if (isRegistered()) chunk.loadedByPlayers
-            .filter { hasAccess(it) && !isSpawned(it) }
+            .filter { !hasDelay("entity_protocol_teleport_${it.name}") && hasAccess(it) && !isSpawned(it) }
             .ifNotEmpty(this::spawn)
     }
 
@@ -346,6 +399,9 @@ class ProtocolEntity(
     }
 
 }
+
+inline fun <reified E : ProtocolEntity> protocolEntity(location: Location) =
+    E::class.java.declaredConstructors.first { it.parameterTypes.first() == Location::class }.newInstance(location)
 
 fun <E : ProtocolEntity> E.register() = apply { registerEntity() }
 

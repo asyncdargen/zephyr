@@ -3,7 +3,6 @@ package dev.zephyr.util.shape
 import dev.zephyr.protocol.getChunkSectionPointer
 import dev.zephyr.protocol.world.ChunkPointer
 import dev.zephyr.util.bukkit.at
-import dev.zephyr.util.bukkit.getBlock
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.numbers.isBetween
 import org.bukkit.Chunk
@@ -12,16 +11,21 @@ import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.entity.Entity
 import org.bukkit.util.Vector
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.round
 
 @KotlinOpens
 class Cuboid(override val world: World, val minPoint: Vector, val maxPoint: Vector) : Shape {
 
     companion object {
 
-        fun at(world: World, x1: Double, y1: Double, z1: Double, x2: Double, y2: Double, z2: Double) =
-            Cuboid(world, Vector(min(x1, x2), min(y1, y2), min(z1, z2)), Vector(max(x1, x2), max(y1, y2), max(z1, z2)))
+        fun at(world: World, x1: Double, y1: Double, z1: Double, x2: Double, y2: Double, z2: Double) = Cuboid(
+            world,
+            Vector(floor(min(x1, x2)), floor(min(y1, y2)), floor(min(z1, z2))),
+            Vector(round(max(x1, x2)), round(max(y1, y2)), round(max(z1, z2)))
+        )
 
         fun at(world: World, firstPoint: Vector, secondPoint: Vector) =
             at(world, firstPoint.x, firstPoint.y, firstPoint.z, secondPoint.x, secondPoint.y, secondPoint.z)
@@ -37,14 +41,19 @@ class Cuboid(override val world: World, val minPoint: Vector, val maxPoint: Vect
             (minPoint.y + maxPoint.y) / 2.0,
             (minPoint.z + maxPoint.z) / 2.0
         )
+    val minLocation get() = minPoint.toLocation(world)
+    val maxLocation get() = maxPoint.toLocation(world)
     val widthX get() = maxPoint.blockX - minPoint.blockX + 1
     val height get() = maxPoint.blockY - minPoint.blockY + 1
     val widthZ get() = maxPoint.blockZ - minPoint.blockZ + 1
+    val size get() = Vector(widthX, height, widthZ)
 
     override val chunks: Sequence<Chunk>
         get() = blocks.map(Block::getChunk).distinct()
     override val blocks: Sequence<Block>
-        get() = asSequence()
+        get() = asSequence().map(Location::getBlock)
+    override val entities: Sequence<Entity>
+        get() = chunks.map(Chunk::getEntities).map(Array<Entity>::toList).flatten()
 
     override val chunksPositionsBlocks: Map<ChunkPointer, List<Block>>
         get() = blocks.groupBy(Block::getChunkSectionPointer)
@@ -77,7 +86,7 @@ class Cuboid(override val world: World, val minPoint: Vector, val maxPoint: Vect
 
     override fun iterator() = CuboidIterator()
 
-    inner class CuboidIterator : Iterator<Block> {
+    inner class CuboidIterator : Iterator<Location> {
 
         private val position = Vector()
 
@@ -93,7 +102,7 @@ class Cuboid(override val world: World, val minPoint: Vector, val maxPoint: Vect
 
         override fun hasNext() = position.x < widthX && position.y < height && position.z < widthZ
 
-        override fun next() = world.getBlock(minPoint.x + position.x, minPoint.y + position.y, minPoint.z + position.z)
+        override fun next() = world.at(minPoint.x + position.x, minPoint.y + position.y, minPoint.z + position.z)
             .apply { step() }
 
     }

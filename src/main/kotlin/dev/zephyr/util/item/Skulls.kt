@@ -57,7 +57,7 @@ fun skull(uuid: UUID, block: ItemStack.() -> Unit = {}) = item(Material.PLAYER_H
 
 var ItemStack.skullGameProfile
     set(value) = metaAs<SkullMeta> { ProfileSetter.invoke(this, value) }.unit()
-    get() = ProfileGetter.invoke(itemMeta) as GameProfile?
+    get() = ProfileGetter.invoke(meta) as GameProfile?
 
 var ItemStack.skullTexture
     set(value) {

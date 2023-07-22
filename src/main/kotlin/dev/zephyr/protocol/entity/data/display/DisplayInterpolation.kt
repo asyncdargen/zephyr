@@ -1,11 +1,11 @@
 package dev.zephyr.protocol.entity.data.display
 
-import dev.zephyr.util.bukkit.afterAsync
-import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.protocol.entity.modify
 import dev.zephyr.protocol.entity.world.display.ProtocolDisplay
 import dev.zephyr.task.Task
 import dev.zephyr.task.onTerminate
+import dev.zephyr.util.bukkit.afterAsync
+import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.util.collection.SwitchableList
 import dev.zephyr.util.kotlin.KotlinOpens
 import java.time.Duration.between
@@ -93,11 +93,11 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     override fun next(block: D.() -> DisplayInterpolation<D>) = block(entity).apply(this::nextInterpolation::set)
 
     override fun run(): DisplayInterpolation<D> = apply {
-        if (entity.isRegistered()) {
+//        if (entity.isRegistered()) {
             running = true
             entity.interpolation = this
             task = createTask()
-        }
+//        }
     }
 
     fun process() {

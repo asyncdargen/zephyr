@@ -47,15 +47,6 @@ class ProtocolDisplay(location: Location, type: EntityType) : ProtocolEntity(typ
         }
     }
 
-    fun removeShadow() {
-        shadowRadius = 0f
-        shadowStrength = 0f
-    }
-
-    fun fullBright() {
-        brightness = Brightness.Max
-    }
-
     override fun handleRemove() {
         super.handleRemove()
 
@@ -82,4 +73,20 @@ inline fun <D : ProtocolDisplay> D.interpolateSwitch(
     this, delay, duration, cycles,
     DisplaySwitchableInterpolation().also { block(it, this) }
 ).apply(DisplayInterpolation<*>::runIfNoPreviousInterpolation)
+
+
+fun <D : ProtocolDisplay> D.removeShadow() = apply {
+    shadowRadius = 0f
+    shadowStrength = 0f
+}
+
+fun <D : ProtocolDisplay> D.fullBright() = apply {
+    brightness = Brightness.Max
+}
+
+fun <D : ProtocolDisplay> D.maxViewRange() = apply {
+    viewRange = Float.MAX_VALUE
+}
+
+
 

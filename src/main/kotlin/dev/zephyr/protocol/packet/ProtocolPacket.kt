@@ -52,6 +52,7 @@ class ProtocolPacket(type: PacketType, block: ((ProtocolPacket) -> Unit)? = null
     companion object {
 
         val VelocityMapper: (Double) -> Int = { it.times(8000).toInt() }
+        val MoveMapper: (Double) -> Short = { it.times(32).times(128).toInt().toShort() }
         val AngleMapper: (Float) -> Byte = { it.times(256F).div(360F).toInt().toByte() }
         val ChatComponentMapper: (String) -> WrappedChatComponent = WrappedChatComponent::fromLegacyText
         val MetadataMapper: (Metadata) -> List<WrappedDataValue> = { it.items.toList() }

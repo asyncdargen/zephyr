@@ -50,6 +50,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
         context ?: removeBlock(blockPosition)
 
         chunkMap.getOrPut(block.chunkSection, ::concurrentHashMapOf)[position] = this
+        block.sendSpawnPackets(viewers)
         context?.add(chunkSection)
     }
 
@@ -129,7 +130,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
     fun removeBlock(position: BlockPosition) =
         chunkMap[position.getChunkSection()]
             ?.remove(position)
-            ?.sendDestroyPackets()
+            ?.sendDestroyPackets(viewers)
 
     fun removeBlock(block: ProtocolBlock) = removeBlock(block.position)
 
@@ -139,16 +140,16 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
         removeBlock(BlockPosition(x.toInt(), y.toInt(), z.toInt()))
 
     //filling
-    fun fillBlocks(shape: Shape, mapper: (Block) -> StructureBlock?) =
+    fun fillBlocks(shape: Shape, mapper: (Location) -> StructureBlock?) =
         shape.asSequence().mapNotNull(mapper).apply { forEach { put(it) } }
 
-    fun fill(shape: Shape, mapper: (Block) -> WrappedBlockData?) =
-        fillBlocks(shape, mapper.mapFully { block, data -> data?.let { StructureBlock(block.location, it) } })
+    fun fill(shape: Shape, mapper: (Location) -> WrappedBlockData?) =
+        fillBlocks(shape, mapper.mapFully { block, data -> data?.let { StructureBlock(block, it) } })
 
-    fun fillData(shape: Shape, mapper: (Block) -> BlockData?) =
+    fun fillData(shape: Shape, mapper: (Location) -> BlockData?) =
         fill(shape, mapper.map { WrappedBlockData.createData(it) })
 
-    fun fillMaterials(shape: Shape, mapper: (Block) -> Material?) =
+    fun fillMaterials(shape: Shape, mapper: (Location) -> Material?) =
         fillData(shape, mapper.map { it?.let(Material::createBlockData) })
 
     operator fun get(shape: Shape) = shape.asSequence().mapNotNull { get(it) }

@@ -8,11 +8,12 @@ import org.bukkit.block.Block
 import org.bukkit.entity.Entity
 import org.bukkit.util.Vector
 
-interface Shape : Iterable<Block> {
+interface Shape : Iterable<Location> {
 
     val world: World
     val chunks: Sequence<Chunk>
     val blocks: Sequence<Block>
+    val entities: Sequence<Entity>
 
     val chunksPositionsBlocks: Map<ChunkPointer, List<Block>>
     val chunksBlocks: Map<Chunk, List<Block>>

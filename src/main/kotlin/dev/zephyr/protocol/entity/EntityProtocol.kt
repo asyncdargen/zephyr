@@ -44,11 +44,12 @@ object EntityProtocol {
                 entity.clickHandler(player, action)
             }
         }
-
-//        on<PlayerChunkLoadEvent> {
-//            getEntitiesInChunk(chunk)
-//                .filter { it.hasAccess(player) }
-//                .forEach { it.spawn(player) }
+//
+//        on<PlayerTeleportEvent> {
+//            val entities = setOf(player)
+//            Entities.forEach { it.destroy(entities) }
+//
+//            setDelay("entity_protocol_teleport_${player.name}", 1000)
 //        }
         on<PlayerChunkUnloadEvent> {
             getEntitiesInChunk(chunk)
@@ -73,7 +74,7 @@ object EntityProtocol {
 
     fun isRegistered(id: Int) = id in EntitiesMap
 
-    fun isRegistered(entity: ProtocolEntity) = isRegistered(entity.id)
+    fun isRegistered(entity: ProtocolEntity) = isRegistered(entity.entityId)
 
     fun getInRange(location: Location, distance: Double) =
         get(location.world).filter { it.location.distance(location) <= distance }

@@ -8,7 +8,7 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolBoat(location: Location, type: EntityType) : ProtocolEntity(type, location) {
+class ProtocolBoat(location: Location, type: EntityType = EntityType.BOAT) : ProtocolEntity(type, location) {
 
     var timeSinceLastHit by metadata.item(8, MetadataType.Int, 0)
     var forwardDirection by metadata.item(9, MetadataType.Int, 1)

@@ -37,7 +37,7 @@ class ProtocolLivingEntity(type: EntityType, location: Location) : ProtocolEntit
     }
 
     fun sendEquipment(items: Equipment = equipment, players: Collection<Player>) = PacketEntityEquipment().also {
-        it.entityId = id
+        it.entityId = entityId
         it.itemsMap = items
     }.sendOrSendAll(players)
 
@@ -55,7 +55,7 @@ class ProtocolLivingEntity(type: EntityType, location: Location) : ProtocolEntit
 
 
     fun animate(animation: EntityAnimation, players: Collection<Player>) = PacketEntityAnimation().also {
-        it.entityId = id
+        it.entityId = entityId
         it.animationId = animation.ordinal
     }.sendOrSendAll(players)
 

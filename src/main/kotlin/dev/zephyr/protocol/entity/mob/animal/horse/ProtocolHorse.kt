@@ -9,7 +9,7 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolHorse(type: EntityType, location: Location) : ProtocolAbstractHorse(type, location) {
+class ProtocolHorse(location: Location) : ProtocolAbstractHorse(EntityType.HORSE, location) {
 
     var variant by metadata.item(18, MetadataType.Int, 0) //Variant (Color & Style)
 

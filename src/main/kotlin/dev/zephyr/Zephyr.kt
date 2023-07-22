@@ -2,6 +2,7 @@ package dev.zephyr
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import dev.zephyr.hook.player.PlayerHooks
 import dev.zephyr.protocol.entity.EntityProtocol
 import dev.zephyr.protocol.scoreboard.ScoreboardProtocol
 import dev.zephyr.protocol.world.PlayerChunks
@@ -35,6 +36,7 @@ object Zephyr : Listener {
         ScoreboardProtocol
         StructureProtocol
 
+        PlayerHooks
     }
 
 }

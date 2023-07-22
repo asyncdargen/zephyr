@@ -16,6 +16,7 @@ import dev.zephyr.protocol.packet.player.PacketPlayerSpawn
 import dev.zephyr.protocol.scoreboard.ProtocolScoreboardTeam
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
+import dev.zephyr.util.bukkit.at
 import dev.zephyr.util.bukkit.diff
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
@@ -52,7 +53,7 @@ class ProtocolPlayer(val skin: SkinTexture?, location: Location) : ProtocolLivin
         visibility = ScoreboardTeamTagVisibility.NEVER
     }
 
-    override var location by observable(location) { _, location -> title.teleport(location.diff(y = 2, pitch = 0)) }
+    override var location by observable(location) { _, location -> title.teleport(location.diff(y = 2).at(pitch = 0)) }
     override var accessor
         get() = super.accessor
         set(value) {
@@ -60,7 +61,7 @@ class ProtocolPlayer(val skin: SkinTexture?, location: Location) : ProtocolLivin
             title.accessor = value
         }
 
-    val title = ProtocolTextDisplay(location.diff(y = 2, pitch = 0))
+    val title = ProtocolTextDisplay(location.diff(y = 2).at(pitch = 0))
 
     override fun sendSpawnPackets(players: Collection<Player>) {
         sendPlayerInfo(PlayerInfoAction.ADD_PLAYER, players)
@@ -68,7 +69,7 @@ class ProtocolPlayer(val skin: SkinTexture?, location: Location) : ProtocolLivin
     }
 
     override fun sendSpawn(players: Collection<Player>) = PacketPlayerSpawn().also {
-        it.entityId = id
+        it.entityId = entityId
         it.entityUUID = uuid
 
         it.location = location
