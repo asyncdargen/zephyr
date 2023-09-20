@@ -10,8 +10,8 @@ typealias EventFilter = (Event) -> Boolean
 interface EventContext : ForkingContext<EventContext> {
 
     val filters: MutableList<EventFilter>
-    fun filter(filter: EventFilter): EventContext
 
+    fun filter(filter: EventFilter): EventContext
     fun onListeners(vararg listeners: Any)
 
     fun <E : Event> on(type: Class<E>, handler: Consumer<E>) =
@@ -27,7 +27,7 @@ interface EventContext : ForkingContext<EventContext> {
 
 }
 
-inline fun <reified E : EventPriority> EventContext.filter(crossinline filter: (E) -> Boolean) =
+inline fun <reified E : Event> EventContext.filter(crossinline filter: (E) -> Boolean) =
     filter { if (it is E) filter(it) else true }
 
 inline fun <reified E : Event> EventContext.on(
@@ -49,4 +49,3 @@ inline fun <reified E : Event> EventContext.on(
     ignoreCancelled: Boolean,
     noinline handler: E.() -> Unit
 ) = on(E::class.java, priority, ignoreCancelled, handler)
-

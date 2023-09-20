@@ -6,4 +6,4 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolGlowingItemFrame(direction: EntityDirection, location: Location) : ProtocolItemFrame(location, direction, EntityType.GLOW_ITEM_FRAME)
+class ProtocolGlowingItemFrame(location: Location, direction: EntityDirection = EntityDirection.UP) : ProtocolItemFrame(location, direction, EntityType.GLOW_ITEM_FRAME)

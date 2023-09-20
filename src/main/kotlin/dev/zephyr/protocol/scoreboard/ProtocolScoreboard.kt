@@ -1,7 +1,6 @@
 package dev.zephyr.protocol.scoreboard
 
 import dev.zephyr.protocol.ProtocolObject
-import dev.zephyr.task.GlobalTaskContext
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
 import org.apache.commons.lang3.RandomStringUtils
@@ -11,7 +10,6 @@ import org.bukkit.entity.Player
 class ProtocolScoreboard(val name: String = RandomStringUtils.randomAlphanumeric(16)) :
     ProtocolObject() {
 
-    val taskContext = GlobalTaskContext.fork()
     val objective = ProtocolScoreboardObjective(name)
 
     var title by observable("") { _, value -> objective.title = value }
@@ -53,7 +51,6 @@ class ProtocolScoreboard(val name: String = RandomStringUtils.randomAlphanumeric
 
     override fun remove() {
         super.remove()
-        taskContext.close()
     }
 
     val Int.scoreName

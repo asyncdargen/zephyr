@@ -11,7 +11,7 @@ import org.bukkit.entity.EntityType
 import org.bukkit.inventory.ItemStack
 
 @KotlinOpens
-class ProtocolItemFrame(location: Location, direction: EntityDirection, type: EntityType) : ProtocolEntity(type, direction.ordinal, location) {
+class ProtocolItemFrame(location: Location, direction: EntityDirection, type: EntityType = EntityType.ITEM_FRAME) : ProtocolEntity(type, direction.ordinal, location) {
 
     var item by metadata.item(8, MetadataType.ItemStack, ItemStack(Material.AIR))
     var rotation by metadata.item(9, MetadataType.Int, FrameRotation.NONE, FrameRotation::ordinal)

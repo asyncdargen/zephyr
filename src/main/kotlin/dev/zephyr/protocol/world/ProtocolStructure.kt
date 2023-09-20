@@ -3,11 +3,15 @@ package dev.zephyr.protocol.world
 import com.comphenix.protocol.wrappers.BlockPosition
 import com.comphenix.protocol.wrappers.WrappedBlockData
 import com.comphenix.protocol.wrappers.WrappedBlockData.createData
+import dev.zephyr.event.EventContext
+import dev.zephyr.event.filter
 import dev.zephyr.protocol.ProtocolObject
 import dev.zephyr.protocol.asBlockPosition
 import dev.zephyr.protocol.asLocation
 import dev.zephyr.protocol.getChunkSection
-import dev.zephyr.protocol.packet.block.PacketMultiBlockChange
+import dev.zephyr.protocol.packet.world.PacketMultiBlockChange
+import dev.zephyr.protocol.world.event.block.ProtocolBlockEvent
+import dev.zephyr.util.block.AirBlockData
 import dev.zephyr.util.bukkit.at
 import dev.zephyr.util.bukkit.isChunkLoaded
 import dev.zephyr.util.collection.concurrentHashMapOf
@@ -25,11 +29,15 @@ import org.bukkit.entity.Player
 
 typealias StructureBlock = ProtocolStructure.ProtocolStructureBlock
 private typealias ChunkBlockMap = MutableMap<ChunkSection, MutableMap<BlockPosition, StructureBlock>>
+private typealias Context = Pair<MutableSet<ChunkSection>/*batch updates*/, MutableSet<BlockPosition>/*damages*/>
+
+private val Context.chunks get() = first
+private val Context.blockDamages get() = second
 
 @KotlinOpens
 class ProtocolStructure(val world: World) : ProtocolObject() {
 
-    protected val contexts = threadLocal { mutableSetOf<ChunkSection>() }
+    protected val contexts = threadLocal<Context> { mutableSetOf<ChunkSection>() to mutableSetOf() }
 
     val chunkMap: ChunkBlockMap = concurrentHashMapOf()
     val chunksSections by chunkMap::keys
@@ -46,12 +54,12 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
     fun put(block: ProtocolBlock) = set(block.position, block)
 
     operator fun set(blockPosition: BlockPosition, block: ProtocolBlock) = StructureBlock(block).apply {
-        val context = contexts.takeIf { it.contains() }?.get()
+        val context = contexts.getOrNull()
         context ?: removeBlock(blockPosition)
 
         chunkMap.getOrPut(block.chunkSection, ::concurrentHashMapOf)[position] = this
         block.sendSpawnPackets(viewers)
-        context?.add(chunkSection)
+        context?.chunks?.add(chunkSection)
     }
 
     operator fun set(location: Location, block: ProtocolBlock) =
@@ -96,6 +104,15 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     operator fun set(x: Number, y: Number, z: Number, material: Material) =
         set(x, y, z, material.createBlockData())
+
+
+    fun getOrCreate(location: Location) = get(location) ?: set(location, AirBlockData)
+
+    fun getOrCreate(block: Block) = get(block) ?: set(block, AirBlockData)
+
+    fun getOrCreate(position: BlockPosition) = get(position) ?: set(position, AirBlockData)
+
+    fun getOrCreate(x: Number, y: Number, z: Number) = get(x, y, z) ?: set(x, y, z, AirBlockData)
 
 
     //getting
@@ -177,6 +194,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
         update(sections, players.toList())
 
     fun sendChunk(chunkSection: ChunkSection, players: Collection<Player>) = PacketMultiBlockChange().also {
+        it.setMeta("protocol", true)
         it.flag = true
         it.chunkSection = chunkSection
         it.blocksByPositions = chunkMap[chunkSection]
@@ -195,7 +213,8 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
         if (new) {
             contexts.remove()
-            update(context)
+            update(context.chunks)
+            context.blockDamages.forEach { get(it)?.sendBlockDamage() }
         }
 
         return this
@@ -211,6 +230,10 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
         super.remove()
     }
 
+    override fun filterEvents(ctx: EventContext) {
+        ctx.filter<ProtocolBlockEvent> { it.structure === this }
+    }
+
     @KotlinOpens
     inner class ProtocolStructureBlock(location: Location, blockData: WrappedBlockData) :
         ProtocolBlock(location, blockData) {
@@ -221,15 +244,21 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
         val structure get() = this@ProtocolStructure
 
         override fun sendBlockDamage(damage: Double, players: Collection<Player>) {
-            if (players !== viewers && players.isNotEmpty() || !contexts.contains()) {
-                super.sendBlockDamage(damage, players)
+            if ((players === viewers || players.isEmpty()) && contexts.contains()) {
+                contexts.get().blockDamages.add(position)
+                return
             }
+
+            super.sendBlockDamage(damage, players)
         }
 
         override fun sendBlockData(data: WrappedBlockData, players: Collection<Player>) {
-            if (players !== viewers && players.isNotEmpty() || !contexts.contains()) {
-                super.sendBlockData(data, players)
+            if ((players === viewers || players.isEmpty()) && contexts.contains()) {
+                contexts.get().chunks.add(chunkSection)
+                return
             }
+
+            super.sendBlockData(data, players)
         }
 
         override var viewers = this@ProtocolStructure.viewers

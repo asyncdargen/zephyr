@@ -6,7 +6,7 @@ import dev.zephyr.util.java.tryAccessAndGet
 import org.apache.commons.lang.ClassUtils
 import java.lang.reflect.Field
 
-object ItemTagTypeMatcher {
+object ItemStackTagTypeMatcher {
 
     val TypeToTagTypeMap = TagType::class.java
         .declaredFields

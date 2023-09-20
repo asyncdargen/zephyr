@@ -20,8 +20,8 @@ fun every(delay: Int, period: Int, periods: Int, handler: (Task) -> Unit) = Glob
 
 fun everyAsync(delay: Int, period: Int, periods: Int, handler: (Task) -> Unit) = GlobalTaskContext.everyAsync(delay, period, periods, handler)
 
+fun sync(task: () -> Unit) = postToMainThread(task)
+
 fun postToMainThread(task: () -> Unit) = MinecraftTaskProcessor.post(task)
 
 fun <T> postToMainThreadCallback(task: () -> T) = MinecraftTaskProcessor.postCallback(task)
-
-fun postToMainThreadAwait(task: () -> Unit) = MinecraftTaskProcessor.postAwait(task)

@@ -14,6 +14,7 @@ typealias JDouble = java.lang.Double
 typealias JString = java.lang.String
 
 typealias JLogger = java.util.logging.Logger
+typealias JEnum<T> = java.lang.Enum<T>
 
 fun uuidFromUnsignedString(uuid: String) = UUID(
     JLong.parseUnsignedLong(uuid.substring(0, 16).uppercase(), 16),

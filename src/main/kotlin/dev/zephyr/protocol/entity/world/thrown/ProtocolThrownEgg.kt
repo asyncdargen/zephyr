@@ -5,5 +5,5 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolThrownEgg(location: Location, ownerEntityId: Int) :
+class ProtocolThrownEgg(location: Location, ownerEntityId: Int = 0) :
     ProtocolThrownItemProjectile(EntityType.EGG, location, ownerEntityId)

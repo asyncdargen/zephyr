@@ -1,7 +1,7 @@
 package dev.zephyr.util.item
 
 import dev.zephyr.util.bukkit.namespaceKey
-import dev.zephyr.util.item.tag.ItemTagTypeMatcher
+import dev.zephyr.util.item.tag.ItemStackTagTypeMatcher
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
@@ -22,7 +22,7 @@ fun <T> ItemStack.tag(key: String, type: TagType<T>, value: T?) =
     tag(namespaceKey(key), type, value)
 
 fun <T> ItemStack.tag(key: NamespacedKey, value: T?) = meta {
-    value?.let { persistentDataContainer[key, ItemTagTypeMatcher.match(it.javaClass)] = it }
+    value?.let { persistentDataContainer[key, ItemStackTagTypeMatcher.match(it.javaClass)] = it }
         ?: persistentDataContainer.remove(key)
 }
 

@@ -7,7 +7,7 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolFishingHook(location: Location, val ownerEntityId: Int) :
+class ProtocolFishingHook(location: Location, val ownerEntityId: Int = 0) :
     ProtocolEntity(EntityType.FISHING_HOOK, ownerEntityId, location) {
 
     var hookedEntityId by metadata.item(8, MetadataType.Int, 0) { it + 1 }

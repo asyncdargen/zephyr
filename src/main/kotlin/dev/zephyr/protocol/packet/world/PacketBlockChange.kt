@@ -1,4 +1,4 @@
-package dev.zephyr.protocol.packet.block
+package dev.zephyr.protocol.packet.world
 
 import com.comphenix.protocol.wrappers.WrappedBlockData
 import dev.zephyr.protocol.PacketPlayOutType

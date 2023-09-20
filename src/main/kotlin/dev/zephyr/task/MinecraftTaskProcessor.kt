@@ -28,6 +28,4 @@ object MinecraftTaskProcessor {
         }
     }
 
-    fun postAwait(task: () -> Unit) = postCallback(task)
-
 }

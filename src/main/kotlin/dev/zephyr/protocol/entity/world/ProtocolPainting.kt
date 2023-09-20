@@ -7,7 +7,7 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolPainting(direction: EntityDirection, location: Location) :
+class ProtocolPainting(location: Location, direction: EntityDirection = EntityDirection.UP) :
     ProtocolEntity(EntityType.PAINTING, direction.ordinal, location) {
 
     //todo: meta type

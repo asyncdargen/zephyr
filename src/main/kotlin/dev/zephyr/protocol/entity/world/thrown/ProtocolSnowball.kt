@@ -5,4 +5,4 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolSnowball(location: Location, ownerEntityId: Int) : ProtocolThrownItemProjectile(EntityType.SNOWBALL, location, ownerEntityId)
+class ProtocolSnowball(location: Location, ownerEntityId: Int = 0) : ProtocolThrownItemProjectile(EntityType.SNOWBALL, location, ownerEntityId)

@@ -25,7 +25,7 @@ object EntityProtocol {
         get() = Entities.asSequence()
 
     init {
-        Protocol.onReceive(PacketPlayInType.USE_ENTITY) {
+        Protocol.onReceive(PacketPlayInType.USE_ENTITY, async = true) {
             val entityId = packet.integers.read(0)
             val entity = EntitiesMap[entityId]
 
@@ -40,8 +40,8 @@ object EntityProtocol {
             entity ?: return@onReceive
             if (!entity.isSpawned(player)) {
                 Zephyr.Logger.warning("Player ${player.name} clicked to protocol entity $entityId not spawned from him!")
-            } else if (!checkOrSetDelay("${entityId}_${player.name}_click", 30)) {
-                entity.clickHandler(player, action)
+            } else checkOrSetDelay("${entityId}_${player.name}_click", 20) {
+                entity.clickHandler(entity, player, action)
             }
         }
 //

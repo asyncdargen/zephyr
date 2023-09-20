@@ -4,11 +4,12 @@ import dev.zephyr.protocol.PacketPlayInType
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.asChunkSection
+import dev.zephyr.protocol.packet.world.PacketBlockAck
 import dev.zephyr.protocol.world.event.block.ProtocolBlockClickEvent
 import dev.zephyr.protocol.world.event.block.ProtocolBlockDigEvent
 import dev.zephyr.protocol.world.event.chunk.PlayerChunkLoadEvent
-import dev.zephyr.protocol.world.event.chunk.PlayerChunkUnloadEvent
 import dev.zephyr.util.bukkit.afterAsync
+import dev.zephyr.util.bukkit.call
 import dev.zephyr.util.bukkit.on
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.kotlin.safeCast
@@ -33,26 +34,39 @@ object StructureProtocol {
                     .filter { it.world === player.world && it.chunk.asChunkSection() == it.chunkSection }
                     .forEach { it.sendSpawnPackets(player) }
 
+                val sections = (-4..20).map(pointer.section::section)
+
                 getPlayerStructures(player)
-                    .filter { it.world === player.world && pointer.section in it.chunksSections }
-                    .forEach { it.update((-4..20).map(pointer.section::section), player) }
+                    .filter { it.world === player.world && sections.any { section -> section in it.chunksSections } }
+                    .forEach { it.update(sections, player) }
             }
-        }
-        on<PlayerChunkUnloadEvent> {
-            getPlayerBlocks(player)
-                .filter { it.chunk == chunk }
-                .forEach { it.sendDestroyPackets(player) }
         }
 
         Protocol.onSend(PacketPlayOutType.BLOCK_CHANGE, async = true) {
-            packet.getMeta<Boolean>("protocol").getOrNull()?.let { return@onSend }
+            packet.getMeta<Boolean>("protocol")
+                .getOrNull()
+                ?.let { return@onSend }
             val position = packet.blockPositionModifier.read(0)
 
             if (getPlayerBlocks(player).any { it.position == position }
                 || getPlayerStructures(player).any { position in it }
             ) isCancelled = true
         }
-        Protocol.onReceive(PacketPlayInType.BLOCK_DIG) {
+//        Protocol.onSend(PacketPlayOutType.MULTI_BLOCK_CHANGE, async = true) {
+//            packet.getMeta<Boolean>("protocol")
+//                .getOrNull()
+//                ?.let { return@onSend }
+//            val chunk = packet.sectionPositions.read(0).asChunkSection()
+//
+//            if (getPlayerBlocks(player).any { it.chunkSection == chunk }
+//                || getPlayerStructures(player).any { chunk in it.chunksSections }
+//            ) {
+//                afterAsync {
+//
+//                }
+//            }
+//        }
+        Protocol.onReceive(PacketPlayInType.BLOCK_DIG, async = true) {
             val position = packet.blockPositionModifier.read(0)
 
             val block = getPlayerBlocks(player).firstOrNull { it.position == position }
@@ -63,9 +77,11 @@ object StructureProtocol {
 
             isCancelled = true
 
-            ProtocolBlockDigEvent(player, block, structure, type).callEvent()
+            PacketBlockAck(packet.integers.read(0)).send(player)
+
+            ProtocolBlockDigEvent(player, block, structure, type).call().keeping()
         }
-        Protocol.onReceive(PacketPlayInType.USE_ITEM) {
+        Protocol.onReceive(PacketPlayInType.USE_ITEM, async = true) {
             val position = packet.movingBlockPositions.read(0).blockPosition
 
             val block = getPlayerBlocks(player).firstOrNull { it.position == position }
@@ -76,7 +92,7 @@ object StructureProtocol {
 
             isCancelled = true
 
-            ProtocolBlockClickEvent(player, block, structure, hand).callEvent()
+            ProtocolBlockClickEvent(player, block, structure, hand).call().keeping()
         }
     }
 

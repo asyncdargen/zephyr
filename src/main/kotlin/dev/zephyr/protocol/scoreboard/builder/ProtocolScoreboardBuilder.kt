@@ -34,11 +34,11 @@ class ProtocolScoreboardBuilder() {
     fun line(interval: Int = 20, lineSupplier: (Player) -> String) =
         line(LazyProtocolScoreboardLine(interval, lineSupplier))
 
-    fun line(index: Int, prefix: String, interval: Int = 20, lineSupplier: (Player) -> String) =
-        line(index, LazyPrefixedProtocolScoreboardLine(prefix, interval, lineSupplier))
+    fun line(index: Int, prefix: String, suffix: String = "", interval: Int = 20, lineSupplier: (Player) -> String) =
+        line(index, LazyWrappedProtocolScoreboardLine(prefix, suffix, interval, lineSupplier))
 
-    fun line(prefix: String, interval: Int = 20, lineSupplier: (Player) -> String) =
-        line(LazyPrefixedProtocolScoreboardLine(prefix, interval, lineSupplier))
+    fun line(prefix: String, suffix: String = "", interval: Int = 20, lineSupplier: (Player) -> String) =
+        line(LazyWrappedProtocolScoreboardLine(prefix, suffix, interval, lineSupplier))
 
     fun line(index: Int) = line(index, EmptyProtocolScoreboardLine)
 
@@ -100,10 +100,10 @@ class ProtocolScoreboardBuilder() {
     }
 
     @KotlinOpens
-    class LazyPrefixedProtocolScoreboardLine(val prefix: String, interval: Int, supplier: (Player) -> String) :
+    class LazyWrappedProtocolScoreboardLine(val prefix: String, val suffix: String, interval: Int, supplier: (Player) -> String) :
         LazyProtocolScoreboardLine(interval, supplier) {
 
-        override fun getContent(player: Player) = "$prefix${super.getContent(player)}"
+        override fun getContent(player: Player) = "$prefix${super.getContent(player)}$suffix"
 
     }
 

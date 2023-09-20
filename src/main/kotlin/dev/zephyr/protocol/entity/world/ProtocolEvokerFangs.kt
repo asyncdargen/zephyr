@@ -1,4 +1,4 @@
-package dev.zephyr.protocol.entity.type
+package dev.zephyr.protocol.entity.world
 
 import dev.zephyr.protocol.entity.ProtocolEntity
 import dev.zephyr.util.kotlin.KotlinOpens

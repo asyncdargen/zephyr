@@ -5,5 +5,5 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolThrownEnderPearl(location: Location, ownerEntityId: Int) :
+class ProtocolThrownEnderPearl(location: Location, ownerEntityId: Int = 0) :
     ProtocolThrownItemProjectile(EntityType.ENDER_PEARL, location, ownerEntityId)

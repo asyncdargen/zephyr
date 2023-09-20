@@ -1,4 +1,4 @@
-package dev.zephyr.protocol.packet.block
+package dev.zephyr.protocol.packet.world
 
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.asBlockPosition

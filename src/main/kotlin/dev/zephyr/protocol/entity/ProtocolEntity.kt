@@ -2,11 +2,15 @@ package dev.zephyr.protocol.entity
 
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.WrappedChatComponent
+import dev.zephyr.event.EventContext
+import dev.zephyr.event.filter
 import dev.zephyr.protocol.ProtocolObject
 import dev.zephyr.protocol.asChunkPointer
+import dev.zephyr.protocol.entity.event.PlayerFakeEntityInteractEvent
 import dev.zephyr.protocol.entity.metadata.MetadataItem
 import dev.zephyr.protocol.entity.metadata.MetadataType
 import dev.zephyr.protocol.entity.metadata.ObservableMetadata
+import dev.zephyr.protocol.entity.type.EntityDamageSource
 import dev.zephyr.protocol.entity.type.EntityInteract
 import dev.zephyr.protocol.packet.entity.*
 import dev.zephyr.protocol.packet.entity.move.*
@@ -22,6 +26,7 @@ import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.collection.ifNotEmpty
 import dev.zephyr.util.collection.observe
 import dev.zephyr.util.kotlin.KotlinOpens
+import dev.zephyr.util.kotlin.cast
 import dev.zephyr.util.kotlin.observable
 import dev.zephyr.util.time.hasDelay
 import org.bukkit.ChatColor
@@ -52,7 +57,7 @@ class ProtocolEntity(
     constructor(type: EntityType, location: Location) :
             this(UUID.randomUUID(), type, 0, location)
 
-    var clickHandler: (Player, EntityInteract) -> Unit = { _, _ -> }
+    var clickHandler: ProtocolEntity.(Player, EntityInteract) -> Unit = { _, _ -> }
     var accessor: (Player) -> Boolean = { true }
 
     val effects =
@@ -162,6 +167,15 @@ class ProtocolEntity(
      **/
     fun sendStatus(status: Int, vararg players: Player) =
         sendStatus(status, players.toList())
+
+    fun damage(source: EntityDamageSource = EntityDamageSource.HURT, players: Collection<Player>) =
+        PacketEntityDamageEvent().also {
+            it.entityId = entityId
+            it.sourceType = source
+        }.sendOrSendAll(players)
+
+    fun damage(source: EntityDamageSource = EntityDamageSource.HURT, vararg players: Player) =
+        damage(source, players.toList())
 
     fun sendEffects(effects: Collection<ProtocolEntityEffect> = this.effects, players: Collection<Player>) =
         effects.forEach { it.add(entityId, players) }
@@ -363,6 +377,10 @@ class ProtocolEntity(
         super.remove()
     }
 
+    override fun filterEvents(ctx: EventContext) {
+        ctx.filter<PlayerFakeEntityInteractEvent> { it.entity === this }
+    }
+
     /*internal bc using register() is better*/
     internal fun registerEntity() {
         if (!isRegistered()) {
@@ -405,7 +423,7 @@ inline fun <reified E : ProtocolEntity> protocolEntity(location: Location) =
 
 fun <E : ProtocolEntity> E.register() = apply { registerEntity() }
 
-infix fun <E : ProtocolEntity> E.click(block: (Player, EntityInteract) -> Unit) = apply { clickHandler = block }
+infix fun <E : ProtocolEntity> E.click(block: E.(Player, EntityInteract) -> Unit) = apply { clickHandler = block.cast() }
 
 infix fun <E : ProtocolEntity> E.access(block: (Player) -> Boolean) = apply { accessor = block }
 

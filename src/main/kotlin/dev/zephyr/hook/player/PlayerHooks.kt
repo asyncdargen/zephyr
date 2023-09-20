@@ -1,5 +1,10 @@
 package dev.zephyr.hook.player
 
+import com.comphenix.protocol.wrappers.EnumWrappers.NativeGameMode
+import com.comphenix.protocol.wrappers.EnumWrappers.PlayerInfoAction
+import com.comphenix.protocol.wrappers.PlayerInfoData
+import com.comphenix.protocol.wrappers.WrappedChatComponent
+import com.comphenix.protocol.wrappers.WrappedGameProfile
 import com.google.common.cache.CacheBuilder
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.Protocol
@@ -9,13 +14,26 @@ import dev.zephyr.protocol.entity.mob.animal.ProtocolTurtle
 import dev.zephyr.protocol.entity.type.display.DisplayBillBoard
 import dev.zephyr.protocol.entity.world.display.*
 import dev.zephyr.protocol.packet.entity.PacketEntityMount
+import dev.zephyr.protocol.packet.player.PacketGameEvent
+import dev.zephyr.protocol.packet.player.PacketPlayerInfoUpdate
 import dev.zephyr.util.bukkit.*
 import dev.zephyr.util.collection.concurrentHashMapOf
+import dev.zephyr.util.collection.takeIfNotEmpty
+import dev.zephyr.util.java.isStatic
 import dev.zephyr.util.java.tryAccessAndGet
 import dev.zephyr.util.kotlin.KotlinOpens
+import dev.zephyr.util.kotlin.cast
+import dev.zephyr.util.kotlin.safeCast
+import net.minecraft.core.IRegistry
+import net.minecraft.core.Registry
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.syncher.DataWatcherObject
 import net.minecraft.resources.MinecraftKey
 import net.minecraft.world.entity.player.EntityHuman
+import net.minecraft.world.flag.FeatureElement
+import net.minecraft.world.flag.FeatureFlagSet
+import net.minecraft.world.flag.FeatureFlags
+import org.bukkit.GameMode
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventPriority
@@ -25,10 +43,11 @@ import org.bukkit.event.player.PlayerTeleportEvent
 import org.bukkit.inventory.ItemStack
 import org.joml.Quaternionf
 import org.joml.Vector3f
+import java.lang.reflect.Field
+import java.lang.reflect.ParameterizedType
 import java.util.concurrent.TimeUnit
 
 object PlayerHooks {
-
 
     val PlayerVehicles = concurrentHashMapOf<Player, PlayerVehicle>()
     val ItemAnimations = CacheBuilder.newBuilder()
@@ -59,11 +78,58 @@ object PlayerHooks {
 
     fun enableNewFeatures() = Protocol.onSend(PacketPlayOutType.UPDATE_ENABLED_FEATURES) {
         packet.modifier.write(0, listOf("update_1_20", "vanilla", "bundle").map(MinecraftKey::a).toSet())
+
+        fun Class<*>.declaredFields(): List<Field> {
+            return if (this == Any::class.java) emptyList()
+            else declaredFields.toList() + superclass.declaredFields
+        }
+
+        val vanillaFeatures = FeatureFlags.f
+        BuiltInRegistries::class.java
+            .declaredFields
+            .filter(Field::isStatic)
+            .filter { Registry::class.java.isAssignableFrom(it.type) }
+            .forEach { field ->
+                runCatching {
+                    val flagFields = field.genericType
+                        .safeCast<ParameterizedType>()
+                        ?.actualTypeArguments
+                        ?.getOrNull(0)
+                        ?.safeCast<Class<*>>()
+                        ?.takeIf { FeatureElement::class.java.isAssignableFrom(it) }
+                        ?.declaredFields()
+                        ?.filter { it.type == FeatureFlagSet::class.java }
+                        ?.onEach { it.trySetAccessible() }
+                        ?.takeIfNotEmpty()
+                        ?: return@forEach
+
+                    val registry = field[null].cast<IRegistry<*>>()
+                    registry.s().forEach { flagFields.forEach { field -> field[it] = vanillaFeatures } }
+                }
+            }
     }
 
     fun showItem(player: Player, item: ItemStack) =
         ItemAnimations.asMap().put(player, PlayerItemAnimation(player, item))?.remove()
 
+}
+
+fun Player.applyFakeGameMode(mode: GameMode) {
+    PacketPlayerInfoUpdate().also {
+        it.actions = setOf(PlayerInfoAction.UPDATE_GAME_MODE)
+        it.playerInfos = listOf(
+            PlayerInfoData(
+                uniqueId, -1, true,
+                NativeGameMode.fromBukkit(mode),
+                WrappedGameProfile.fromPlayer(this),
+                WrappedChatComponent.fromLegacyText("")
+            )
+        )
+    }.send(this)
+    PacketGameEvent().also {
+        it.type = 3
+        it.value = mode.value.toFloat()
+    }.send(this)
 }
 
 fun Player.hideHealth() = craft().handle.aj().b(PlayerHooks.AbsorptionDataWatcherObject, -1_000_000_00f)

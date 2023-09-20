@@ -5,5 +5,5 @@ import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
 @KotlinOpens
-class ProtocolThrownExperienceBottle(location: Location, ownerEntityId: Int) :
+class ProtocolThrownExperienceBottle(location: Location, ownerEntityId: Int = 0) :
     ProtocolThrownItemProjectile(EntityType.THROWN_EXP_BOTTLE, location, ownerEntityId)

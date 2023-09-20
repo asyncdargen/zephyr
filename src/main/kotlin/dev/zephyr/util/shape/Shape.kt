@@ -30,6 +30,26 @@ interface Shape : Iterable<Location> {
 
     operator fun contains(shape: Shape): Boolean
 
+    fun expandVertical(y: Double): Shape
+
+    fun expandVertical(minY: Double, maxY: Double): Shape
+
+    fun expandHorizontal(value: Double): Shape
+
+    fun expandHorizontal(x: Double, z: Double): Shape
+
+    fun expandHorizontal(minX: Double, minZ: Double, maxX: Double, maxZ: Double): Shape
+
+    fun expand(value: Double): Shape
+
+    fun expand(x: Double, y: Double, z: Double): Shape
+
+    fun expand(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): Shape
+
+    fun diff(value: Double): Shape
+
+    fun diff(x: Double, y: Double, z: Double): Shape
+
     fun clone(world: World = this.world): Shape
 
 }

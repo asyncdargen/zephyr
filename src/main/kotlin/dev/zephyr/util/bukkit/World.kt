@@ -7,6 +7,8 @@ import org.bukkit.World
 import org.bukkit.craftbukkit.v1_19_R3.CraftWorld
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import kotlin.math.absoluteValue
+import kotlin.math.floor
 
 
 fun world(name: String = "world") = Bukkit.getWorld(name)
@@ -50,10 +52,42 @@ fun Location.directionTo(to: Location) = to.clone().subtract(this).toVector()
 
 fun Location.directedTo(to: Location) = clone().apply { direction = directionTo(to).normalize() }
 
-fun Location.expandByDirection(directionMultiplier: Double = 1.0) =
+fun Location.extendByDirection(directionMultiplier: Double = 1.0) =
     clone().add(direction.normalize().multiply(directionMultiplier))
 
-fun Location.expandByDirection(to: Location, directionMultiplier: Double = 1.0) =
+fun Location.extendByDirection(to: Location, directionMultiplier: Double = 1.0) =
     clone().add(directionTo(to).normalize().multiply(directionMultiplier))
 
 fun Location.clearAngles() = at(yaw = 0, pitch = 0)
+
+fun Location.distanceX(other: Location) = (other.x - x).absoluteValue
+
+fun Location.distanceY(other: Location) = (other.y - y).absoluteValue
+
+fun Location.distanceZ(other: Location) = (other.z - z).absoluteValue
+
+fun Location.getNeighbors(xSize: Int, ySize: Int, zSize: Int) = buildList {
+    val startX = floor(x - xSize).toInt()
+    val endX = floor(x + xSize).toInt()
+    val startY = floor(y - ySize).toInt()
+    val endY = floor(y + ySize).toInt()
+    val startZ = floor(z - zSize).toInt()
+    val endZ = floor(z + zSize).toInt()
+
+    var dx = startX
+    var dy = startY
+    var dz = startZ
+
+    while (dx <= endX) {
+        while (dy <= endY) {
+            while (dz <= endZ) {
+                add(at(dx, dy, dz))
+                ++dz
+            }
+            dz = startZ
+            ++dy
+        }
+        dy = startY
+        ++dx
+    }
+}
