@@ -4,7 +4,7 @@ import dev.zephyr.util.function.ForkingContext
 
 interface TaskContext : ForkingContext<TaskContext> {
 
-    val tasks: MutableMap<Int, Task>
+    val tasks: MutableMap<Int, out Task>
 
     fun after(handler: (Task) -> Unit) = run(true, 1, 1, 1, handler)
 

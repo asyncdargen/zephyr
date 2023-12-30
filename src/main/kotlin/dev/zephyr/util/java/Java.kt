@@ -38,3 +38,5 @@ fun openJavaModules(vararg modules: String) {
     addOpensMH.invoke("jdk.internal.misc")
     modules.forEach { addOpensMH.invoke(it) }
 }
+
+inline fun bitSet(block: BitSet.() -> Unit) = BitSet().apply(block)

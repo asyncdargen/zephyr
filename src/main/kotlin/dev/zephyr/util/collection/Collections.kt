@@ -3,6 +3,9 @@ package dev.zephyr.util.collection
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+fun <T, V> MutableCollection<V>.mirror(extractor: (V) -> T, mapper: (T) -> V): MutableCollection<T> =
+    CollectionMirror(this, extractor, mapper)
+
 fun <T, C : Collection<T>> C.sync() = Collections.synchronizedCollection(this)
 
 fun <K, V, M : Map<K, V>> M.sync() = Collections.synchronizedMap(this)

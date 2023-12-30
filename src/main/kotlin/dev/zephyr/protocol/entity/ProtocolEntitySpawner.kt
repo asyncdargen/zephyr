@@ -55,6 +55,7 @@ import dev.zephyr.protocol.entity.world.fireball.ProtocolDragonFireball
 import dev.zephyr.protocol.entity.world.fireball.ProtocolFireball
 import dev.zephyr.protocol.entity.world.fireball.ProtocolSmallFireball
 import dev.zephyr.protocol.entity.world.frame.ProtocolGlowingItemFrame
+import dev.zephyr.protocol.entity.world.frame.ProtocolItemFrame
 import dev.zephyr.protocol.entity.world.living.ProtocolArmorStand
 import dev.zephyr.protocol.entity.world.living.ProtocolPlayer
 import dev.zephyr.protocol.entity.world.minecart.*
@@ -112,8 +113,8 @@ object ProtocolEntitySpawner {
         spawner(EntityType.SNOWMAN, ::ProtocolSnowGolem)
         spawner(EntityType.ELDER_GUARDIAN, ::ProtocolElderGuardian)
         spawner(EntityType.GUARDIAN, ::ProtocolGuardian)
-        spawner(EntityType.PIG, ::ProtocolPiglin)
-        spawner(EntityType.PIG, ::ProtocolPiglinBrute)
+        spawner(EntityType.PIGLIN, ::ProtocolPiglin)
+        spawner(EntityType.PIGLIN_BRUTE, ::ProtocolPiglinBrute)
         spawner(EntityType.BLAZE, ::ProtocolBlaze)
         spawner(EntityType.CREEPER, ::ProtocolCreeper)
         spawner(EntityType.ENDERMAN, ::ProtocolEnderman)
@@ -189,6 +190,9 @@ object ProtocolEntitySpawner {
         spawner(EntityType.TRIDENT, ::ProtocolThrownTrident)
         spawner(EntityType.SNIFFER, ::ProtocolSniffer)
         spawner(EntityType.CAMEL, ::ProtocolCamel)
+
+        spawner(EntityType.ITEM_FRAME, ::ProtocolItemFrame)
+        spawner(EntityType.GLOW_ITEM_FRAME, ::ProtocolGlowingItemFrame)
 
         spawner(EntityType.ITEM_DISPLAY, ::ProtocolItemDisplay)
         spawner(EntityType.BLOCK_DISPLAY, ::ProtocolBlockDisplay)

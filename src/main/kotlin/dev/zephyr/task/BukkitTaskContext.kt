@@ -2,7 +2,9 @@ package dev.zephyr.task
 
 import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.collection.concurrentSetOf
+import dev.zephyr.util.kotlin.KotlinOpens
 
+@KotlinOpens
 class BukkitTaskContext : TaskContext {
 
     override val forks = concurrentSetOf<TaskContext>()

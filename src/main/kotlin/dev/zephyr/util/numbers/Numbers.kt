@@ -8,4 +8,4 @@ val Int.isPositive
 /*better then kotlin ranges*/
 inline fun <N> N.isBetween(min: N, max: N) where N : Number, N : Comparable<N> = this >= min && this <= max
 
-fun square(value: Float) = value * value
+fun square(value: Double) = value * value

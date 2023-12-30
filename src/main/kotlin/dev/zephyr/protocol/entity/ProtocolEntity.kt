@@ -28,7 +28,6 @@ import dev.zephyr.util.collection.observe
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.cast
 import dev.zephyr.util.kotlin.observable
-import dev.zephyr.util.time.hasDelay
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.entity.EntityType
@@ -90,8 +89,8 @@ class ProtocolEntity(
     var ticksFrozen by metadata.item(7, MetadataType.Int, 0)
     var isOnGround = true
 
-    val boundingBox get() = type.boundingBox
-    val positionBox get() = boundingBox.shift(location)
+    val boundingBox = type.boundingBox
+    val positionBox get() = boundingBox.clone().shift(location)
     var location by observable(location) { _, _ -> spawnLocal() }
     val chunkPointer get() = location.asChunkPointer()
     val chunk get() = location.chunk
@@ -391,8 +390,8 @@ class ProtocolEntity(
     }
 
     fun spawnLocal() {
-        if (isRegistered()) chunk.loadedByPlayers
-            .filter { !hasDelay("entity_protocol_teleport_${it.name}") && hasAccess(it) && !isSpawned(it) }
+        if (isRegistered()) chunkPointer.loadedByPlayers
+            .filter { hasAccess(it) && !isSpawned(it) }
             .ifNotEmpty(this::spawn)
     }
 

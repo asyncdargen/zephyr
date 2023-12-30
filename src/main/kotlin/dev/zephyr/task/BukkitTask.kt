@@ -2,6 +2,7 @@ package dev.zephyr.task
 
 import dev.zephyr.Zephyr
 import dev.zephyr.util.concurrent.threadLocal
+import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scheduler.BukkitTask
 import java.util.logging.Level
@@ -10,6 +11,7 @@ val TickingTasks = threadLocal<Task>()
 
 fun currentTask() = TickingTasks.get()
 
+@KotlinOpens
 class BukkitTask(
     override val delay: Int,
     override val period: Int = 0,

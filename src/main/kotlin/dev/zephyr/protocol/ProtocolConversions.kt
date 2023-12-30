@@ -28,11 +28,11 @@ fun World.chunkPointer(x: Int, y: Int, z: Int) = ChunkPointer(this, x, y, z)
 
 fun World.chunkPointer(x: Int, z: Int) = ChunkPointer(this, x, z)
 
-fun Location.asChunkPointer() = world.chunkPointer(x.toInt() shl 4, 0, z.toInt() shl 4)
+fun Location.asChunkPointer() = world.chunkPointer(blockX shl 4, 0, blockZ shl 4)
 
-fun Location.asChunkSectionPointer() = world.chunkPointer(x.toInt() shr 4, y.toInt() shr 4, z.toInt() shr 4)
+fun Location.asChunkSectionPointer() = world.chunkPointer(blockX shr 4, blockY shr 4, blockZ shr 4)
 
-fun Location.asChunkSection() = ChunkSection(x.toInt() shr 4, y.toInt() shr 4, z.toInt() shr 4)
+fun Location.asChunkSection() = ChunkSection(blockX shr 4, blockY shr 4, blockZ shr 4)
 
 fun Block.getChunkPointer() = location.asChunkPointer()
 

@@ -1,8 +1,8 @@
 package dev.zephyr.util.bukkit
 
 import dev.zephyr.task.GlobalTaskContext
-import dev.zephyr.task.MinecraftTaskProcessor
 import dev.zephyr.task.Task
+import dev.zephyr.task.MinecraftTaskProcessor
 
 fun after(handler: (Task) -> Unit) = GlobalTaskContext.after(handler)
 

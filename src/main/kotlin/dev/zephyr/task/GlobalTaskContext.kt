@@ -1,3 +1,5 @@
 package dev.zephyr.task
 
-object GlobalTaskContext : TaskContext by BukkitTaskContext()
+var GlobalTaskContext: TaskContext = BukkitTaskContext()
+
+fun TaskContext.makeGlobal() = ::GlobalTaskContext.set(this)
