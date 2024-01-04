@@ -31,12 +31,12 @@ object Zephyr : Listener {
 
         openJavaModules()
 
-        PlayerChunks.initialize()
-        EntityProtocol.initialize()
-        ScoreboardProtocol.initialize()
-        StructureProtocol.initialize()
+        PlayerChunks
+        EntityProtocol
+        ScoreboardProtocol
+        StructureProtocol
 
-        PlayerHooks.initialize()
+        PlayerHooks
     }
 
 }

@@ -22,7 +22,7 @@ object PlayerChunks {
     val PlayersLoadedChunks = concurrentHashMapOf<Player, MutableSet<ChunkPointer>>()
     val ChunksLoadedPlayers = concurrentHashMapOf<ChunkPointer, MutableSet<Player>>()
 
-    fun initialize() {
+    init {
         on<PlayerQuitEvent> { removeAll(player) }
         on<PlayerChangedWorldEvent> { removeAll(player) }
 

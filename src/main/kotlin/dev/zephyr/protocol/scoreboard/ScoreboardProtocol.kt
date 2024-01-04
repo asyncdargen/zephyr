@@ -12,7 +12,7 @@ object ScoreboardProtocol {
     lateinit var BoundedScoreboard: ProtocolScoreboardBuilder
     val PlayerScoreboards = concurrentHashMapOf<Player, ProtocolScoreboard>()
 
-    fun initialize() {
+    init {
         on<PlayerJoinEvent> {
             if (this@ScoreboardProtocol::BoundedScoreboard.isInitialized) {
                 BoundedScoreboard.create(player)
