@@ -24,7 +24,7 @@ object EntityProtocol {
     val EntitiesSequence
         get() = Entities.asSequence()
 
-    init {
+    fun initialize() {
         Protocol.onReceive(PacketPlayInType.USE_ENTITY, async = true) {
             val entityId = packet.integers.read(0)
             val entity = EntitiesMap[entityId]

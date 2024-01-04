@@ -22,7 +22,7 @@ object StructureProtocol {
     val Blocks = concurrentSetOf<ProtocolBlock>()
     val Structures = concurrentSetOf<ProtocolStructure>()
 
-    init {
+    fun initialize() {
         on<PlayerQuitEvent> {
             Blocks.forEach { it.destroy(player) }
             Structures.forEach { it.destroy(player) }

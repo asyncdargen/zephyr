@@ -58,7 +58,7 @@ object PlayerHooks {
         .first { it.type == DataWatcherObject::class.java }
         .tryAccessAndGet<DataWatcherObject<Float>>()
 
-    init {
+    fun initialize() {
         everyAsync(25, 25) {
             PlayerVehicles.values.forEach(ProtocolVehicle::syncMounts)
         }
