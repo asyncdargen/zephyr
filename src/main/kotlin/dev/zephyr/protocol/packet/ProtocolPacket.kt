@@ -7,11 +7,10 @@ import com.comphenix.protocol.wrappers.WrappedChatComponent
 import com.comphenix.protocol.wrappers.WrappedDataValue
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.entity.metadata.Metadata
-import dev.zephyr.util.bukkit.toWrappedChatComponent
+import dev.zephyr.util.component.wrap
 import dev.zephyr.util.kotlin.KotlinOpens
 import it.unimi.dsi.fastutil.ints.IntList
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import org.bukkit.entity.Player
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -57,8 +56,8 @@ class ProtocolPacket(type: PacketType, block: ((ProtocolPacket) -> Unit)? = null
         val VelocityMapper: (Double) -> Int = { it.times(8000).toInt() }
         val MoveMapper: (Double) -> Short = { it.times(32).times(128).toInt().toShort() }
         val AngleMapper: (Float) -> Byte = { it.times(256F).div(360F).toInt().toByte() }
-        val ChatComponentMapper: (String) -> WrappedChatComponent = WrappedChatComponent::fromLegacyText
-        val KyoriComponentMapper: (Component) -> WrappedChatComponent = { it.toWrappedChatComponent() }
+        val StringChatComponentMapper: (String) -> WrappedChatComponent = WrappedChatComponent::fromLegacyText
+        val ChatComponentMapper: (Component) -> WrappedChatComponent = Component::wrap
         val MetadataMapper: (Metadata) -> List<WrappedDataValue> = { it.items.toList() }
         val IntListMapper: (Collection<Int>) -> IntList = { IntList.of(*it.toIntArray()) }
 

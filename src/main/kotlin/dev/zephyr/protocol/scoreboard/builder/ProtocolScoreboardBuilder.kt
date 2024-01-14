@@ -3,6 +3,7 @@ package dev.zephyr.protocol.scoreboard.builder
 import dev.zephyr.protocol.scoreboard.ProtocolScoreboard
 import dev.zephyr.protocol.scoreboard.ScoreboardProtocol
 import dev.zephyr.util.collection.filterValuesIsInstance
+import dev.zephyr.util.component.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.entity.Player
 
@@ -56,7 +57,7 @@ class ProtocolScoreboardBuilder() {
                 } else this
             }
 
-            title = this@ProtocolScoreboardBuilder.title
+            title = this@ProtocolScoreboardBuilder.title.toComponent()
 
             lines.filterValuesIsInstance<Int, StaticProtocolScoreboardLine>().forEach { (index, line) ->
                 setLine(index, line.getContent(player))

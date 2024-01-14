@@ -30,6 +30,6 @@ object ScoreboardProtocol {
 
     operator fun get(player: Player) = PlayerScoreboards[player]
 
-    fun remove(player: Player) = PlayerScoreboards.remove(player)?.apply(ProtocolScoreboard::remove)
+    fun remove(player: Player) = PlayerScoreboards.remove(player)?.remove()
 
 }

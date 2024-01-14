@@ -5,7 +5,8 @@ import dev.zephyr.protocol.packet.scoreboard.PacketScoreboardDisplayObjective
 import dev.zephyr.protocol.packet.scoreboard.PacketScoreboardObjective
 import dev.zephyr.protocol.scoreboard.type.ScoreboardHealthDisplay
 import dev.zephyr.protocol.scoreboard.type.ScoreboardObjectiveAction
-import dev.zephyr.util.bukkit.toComponent
+import dev.zephyr.util.component.literal
+import dev.zephyr.util.component.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
 import net.kyori.adventure.text.Component
@@ -14,10 +15,15 @@ import org.bukkit.scoreboard.DisplaySlot
 import kotlin.properties.ReadWriteProperty
 
 @KotlinOpens
-class ProtocolScoreboardObjective(val name: String, val displaySlot: DisplaySlot = DisplaySlot.PLAYER_LIST) : ProtocolObject() {
+class ProtocolScoreboardObjective(val name: String, val displaySlot: DisplaySlot = DisplaySlot.SIDEBAR) :
+    ProtocolObject() {
 
-    var title by observable(name)
-    var titleComponent : Component by observable(title.toComponent())
+    var title: String
+        get() = titleComponent.literal()
+        set(value) {
+            titleComponent = value.toComponent()
+        }
+    var titleComponent by observable<Component>(Component.empty())
     var healthDisplay by observable(ScoreboardHealthDisplay.INTEGER)
 
     protected val teamMap: MutableMap<String, ProtocolScoreboardTeam> = hashMapOf()
@@ -80,8 +86,7 @@ class ProtocolScoreboardObjective(val name: String, val displaySlot: DisplaySlot
         PacketScoreboardObjective().also {
             it.objectiveName = name
             it.healthDisplay = healthDisplay
-//            it.displayName = title
-            it.displayComponent = titleComponent
+            it.displayNameComponent = titleComponent
             it.action = action
         }.sendOrSendAll(players)
 

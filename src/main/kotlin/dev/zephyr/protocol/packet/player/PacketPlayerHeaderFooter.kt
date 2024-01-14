@@ -7,10 +7,10 @@ import dev.zephyr.util.kotlin.KotlinOpens
 @KotlinOpens
 class PacketPlayerHeaderFooter : ProtocolPacket(PacketPlayOutType.PLAYER_LIST_HEADER_FOOTER) {
 
-    var header by writer(0, chatComponents, ChatComponentMapper)
-    var footer by writer(1, chatComponents, ChatComponentMapper)
+    var header by writer(0, chatComponents, StringChatComponentMapper)
+    var footer by writer(1, chatComponents, StringChatComponentMapper)
 
-    var headerComponent by writer(0, chatComponents, KyoriComponentMapper)
-    var footerComponent by writer(1, chatComponents, KyoriComponentMapper)
+    var headerComponents by writer(0, chatComponents, ChatComponentMapper)
+    var footerComponents by writer(1, chatComponents, ChatComponentMapper)
 
 }

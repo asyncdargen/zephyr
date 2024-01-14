@@ -1,15 +1,19 @@
 package dev.zephyr.util.bukkit
 
-import com.comphenix.protocol.wrappers.WrappedChatComponent
+import dev.zephyr.util.component.literal
+import dev.zephyr.util.component.toComponents
+import dev.zephyr.util.component.wrap
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.md_5.bungee.api.chat.TextComponent
 
-fun Collection<String>.toComponentList() = map(String::toComponent)
 
+@Deprecated("use Iterable#toComponents insead of")
+fun Collection<String>.toComponentList() = toComponents()
+
+
+@Deprecated("use String?#toComponent insead of")
 fun String?.toComponent() = this?.let { component ->
     TextComponent.fromLegacyText(component)
         .asSequence()
@@ -28,11 +32,12 @@ fun String?.toComponent() = this?.let { component ->
         .let(Component::textOfChildren)
 } ?: Component.empty()
 
-fun Component.toWrappedChatComponent(): WrappedChatComponent = JSONComponentSerializer.json().serialize(this).let {
-    WrappedChatComponent.fromJson(it)
-}
 
-fun Collection<Component>.toTextList() = map(Component::toText)
+@Deprecated("use Component#wrap insead of")
+fun Component.toWrappedChatComponent() = wrap()
 
-fun Component.toText() =
-    LegacyComponentSerializer.legacySection().serialize(this)
+@Deprecated("use Iterable#literal insead of")
+fun Collection<Component>.toTextList() = literal()
+
+@Deprecated("use Component#literal insead of")
+fun Component.toText() = literal()

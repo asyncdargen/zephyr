@@ -36,8 +36,8 @@ class MetadataType<T>(val serializer: Serializer, val converter: ((T) -> Any)? =
         val BlockPosition = MetadataType<BlockPosition>(Registry.getBlockPositionSerializer(false))
         val BlockPositionOptional = MetadataType<Optional<BlockPosition>>(Registry.getBlockPositionSerializer(true))
 
-        val ChatComponent = MetadataType<WrappedChatComponent>(Registry.getChatComponentSerializer(false))
-        val ChatComponentOptional = MetadataType<Optional<WrappedChatComponent>>(Registry.getChatComponentSerializer(true))
+        val Chat = MetadataType<WrappedChatComponent>(Registry.getChatComponentSerializer(false))
+        val ChatOptional = MetadataType<Optional<WrappedChatComponent>>(Registry.getChatComponentSerializer(true))
 
         val BlockData = MetadataType<WrappedBlockData>(Registry.getBlockDataSerializer(false))
         val BlockDataOptional = MetadataType<Optional<WrappedBlockData>>(Registry.getBlockDataSerializer(true))

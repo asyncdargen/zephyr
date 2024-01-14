@@ -1,3 +1,5 @@
 package dev.zephyr.util.time
 
-fun currentMillis() = System.currentTimeMillis()
+val currentMillis get() = System.currentTimeMillis()
+
+val currentNanos get() = System.nanoTime()

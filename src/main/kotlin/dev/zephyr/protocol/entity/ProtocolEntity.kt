@@ -22,10 +22,13 @@ import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
 import dev.zephyr.util.bukkit.boundingBox
 import dev.zephyr.util.bukkit.clearAngles
 import dev.zephyr.util.bukkit.loadedByPlayers
-import dev.zephyr.util.bukkit.toWrappedChatComponent
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.collection.ifNotEmpty
 import dev.zephyr.util.collection.observe
+import dev.zephyr.util.component.literal
+import dev.zephyr.util.component.toComponent
+import dev.zephyr.util.component.unwrap
+import dev.zephyr.util.component.wrap
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.cast
 import dev.zephyr.util.kotlin.observable
@@ -37,7 +40,9 @@ import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
 import java.util.*
+import java.util.Optional.ofNullable
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.jvm.optionals.getOrNull
 
 @KotlinOpens
 class ProtocolEntity(
@@ -79,17 +84,17 @@ class ProtocolEntity(
 
     var glowColor by observable(ChatColor.RESET) { _, value -> team.color = value }
     var ticksAir by metadata.item(1, MetadataType.Int, 0)
-    var customName by metadata.item<String?, Optional<WrappedChatComponent>>(
-        2, MetadataType.ChatComponentOptional, null
-    ) { Optional.ofNullable(it?.let(WrappedChatComponent::fromLegacyText)) } on {
-        isCustomNameVisible = it.value != null
-    }
-
-    var customNameComponent by metadata.item<Component?, Optional<WrappedChatComponent>>(
-        2, MetadataType.ChatComponentOptional, null
-    ) { Optional.ofNullable(it?.toWrappedChatComponent()) } on {
-        isCustomNameVisible = it.value != null
-    }
+    var customName: String?
+        get() = customNameComponent?.literal()
+        set(value) {
+            customNameComponent = value?.toComponent()
+        }
+    var customNameComponent: Component?
+        get() = metadata.get<Optional<WrappedChatComponent>>(2)?.value?.getOrNull()?.unwrap()
+        set(value) {
+            metadata[2] = MetadataType.ChatOptional.newItem(2, ofNullable(value?.wrap()))
+            isCustomNameVisible = value != null
+        }
 
     var isCustomNameVisible by metadata.item(3, MetadataType.Boolean, false)
     var isSilent by metadata.item(4, MetadataType.Boolean, false)
@@ -157,12 +162,6 @@ class ProtocolEntity(
 
     fun sendDestroy(vararg players: Player) =
         sendDestroy(players.toList())
-
-    fun setPrivateCustomName(customName: String, players: Collection<Player>) =
-        modifySpecial(players) { this.customName = customName }
-
-    fun setPrivateCustomName(customName: String, vararg players: Player) =
-        setPrivateCustomName(customName, players.toList())
 
     fun sendStatus(status: Int, players: Collection<Player>) = PacketEntityStatus().also {
         it.entityId = entityId
@@ -431,7 +430,8 @@ inline fun <reified E : ProtocolEntity> protocolEntity(location: Location) =
 
 fun <E : ProtocolEntity> E.register() = apply { registerEntity() }
 
-infix fun <E : ProtocolEntity> E.click(block: E.(Player, EntityInteract) -> Unit) = apply { clickHandler = block.cast() }
+infix fun <E : ProtocolEntity> E.click(block: E.(Player, EntityInteract) -> Unit) =
+    apply { clickHandler = block.cast() }
 
 infix fun <E : ProtocolEntity> E.access(block: (Player) -> Boolean) = apply { accessor = block }
 

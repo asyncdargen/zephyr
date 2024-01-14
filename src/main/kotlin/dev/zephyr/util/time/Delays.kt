@@ -9,13 +9,13 @@ val DelayMap = WeakHashMap<String, Long>()
 fun getDelay(id: String) = DelayMap[id]?.let { it - System.currentTimeMillis() } ?: 0
 
 fun setDelay(id: String, duration: Duration) {
-    DelayMap[id.lowercase()] = currentMillis() + duration.inWholeMilliseconds
+    DelayMap[id.lowercase()] = currentMillis + duration.inWholeMilliseconds
 }
 
 fun setDelay(id: String, duration: Long) =
     setDelay(id, duration.milliseconds)
 
-fun hasDelay(id: String) = (DelayMap[id.lowercase()] ?: 0) > currentMillis()
+fun hasDelay(id: String) = (DelayMap[id.lowercase()] ?: 0) > currentMillis
 
 fun removeDelay(id: String) = DelayMap.remove(id.lowercase())
 

@@ -6,14 +6,18 @@ import dev.zephyr.protocol.packet.ProtocolPacket
 import dev.zephyr.task.GlobalTaskContext
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.kotlin.KotlinOpens
-import dev.zephyr.util.kotlin.isLazyInitialized
 import org.bukkit.entity.Player
 
 @KotlinOpens
 abstract class ProtocolObject  {
 
-    val eventContext by lazy { GlobalEventContext.fork(false).apply(this::filterEvents) }
-    val taskContext by lazy { GlobalTaskContext.fork(false) }
+    final var hasTaskContext: Boolean = false
+        private set
+    final var hasEventContext: Boolean = false
+        private set
+
+    val eventContext by lazy { hasEventContext = true; GlobalEventContext.fork(false).apply(this::filterEvents) }
+    val taskContext by lazy { hasTaskContext = true; GlobalTaskContext.fork(false) }
 
     val viewers: MutableCollection<Player> = concurrentSetOf()
 
@@ -62,10 +66,11 @@ abstract class ProtocolObject  {
     fun remove() {
         handleRemove()
         destroy(viewers)
-        if (this::eventContext.isLazyInitialized) {
+
+        if (hasEventContext) {
             eventContext.close()
         }
-        if (this::taskContext.isLazyInitialized) {
+        if (hasTaskContext) {
             taskContext.close()
         }
 

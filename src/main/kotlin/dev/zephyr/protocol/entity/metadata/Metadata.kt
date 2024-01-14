@@ -8,6 +8,7 @@ import dev.zephyr.protocol.entity.metadata.property.MetadataObservableProperty
 import dev.zephyr.util.concurrent.threadLocal
 import dev.zephyr.util.java.throwIfNonNull
 import dev.zephyr.util.kotlin.KotlinOpens
+import dev.zephyr.util.kotlin.safeCast
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 
 @KotlinOpens
@@ -40,7 +41,7 @@ class Metadata {
 
     operator fun <T> set(index: Int, type: MetadataType<T>, data: T?) = set(index, type.newItem(index, data))
 
-    operator fun get(index: Int) = itemsMap[index]
+    operator fun <T> get(index: Int) = itemsMap[index].safeCast<MetadataItem<T>>()
 
     fun remove(index: Int) {
         itemsMap.remove(index)

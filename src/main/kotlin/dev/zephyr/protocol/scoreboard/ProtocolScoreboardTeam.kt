@@ -5,7 +5,9 @@ import dev.zephyr.protocol.packet.scoreboard.PacketScoreboardTeam
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamAction
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
-import dev.zephyr.util.bukkit.toComponent
+import dev.zephyr.util.collection.observe
+import dev.zephyr.util.component.literal
+import dev.zephyr.util.component.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
 import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
@@ -28,19 +30,32 @@ class ProtocolScoreboardTeam(val name: String, entities: List<String>) : Protoco
 
     }
 
-    val entities: MutableList<String> = entities.toMutableList() //todo: make observable list
+    val entities = entities.toMutableList().observe(updateEntityAdd, updateEntityRemove)
 
     var collision by observable(ScoreboardTeamCollision.ALWAYS)
     var visibility by observable(ScoreboardTeamTagVisibility.ALWAYS)
     var color by observable(ChatColor.RESET)
+    var flags by observable(0)
 
-    var displayName by observable("")
-    var prefix by observable("")
-    var suffix by observable("")
+    var displayName: String
+        set(value) {
+            displayNameComponent = value.toComponent()
+        }
+        get() = displayNameComponent.literal()
+    var prefix: String
+        set(value) {
+            prefixComponent = value.toComponent()
+        }
+        get() = prefixComponent.literal()
+    var suffix: String
+        set(value) {
+            suffixComponent = value.toComponent()
+        }
+        get() = suffixComponent.literal()
 
-    var displayComponent: Component by observable(displayName.toComponent())
-    var prefixComponent: Component by observable(prefix.toComponent())
-    var suffixComponent: Component by observable(suffix.toComponent())
+    var displayNameComponent by observable<Component>(Component.empty())
+    var prefixComponent by observable<Component>(Component.empty())
+    var suffixComponent by observable<Component>(Component.empty())
 
     override fun sendSpawnPackets(players: Collection<Player>) {
         sendUpdates(ScoreboardTeamAction.CREATE, players)
@@ -51,26 +66,21 @@ class ProtocolScoreboardTeam(val name: String, entities: List<String>) : Protoco
     }
 
     fun sendUpdates(action: ScoreboardTeamAction, players: Collection<Player>) = PacketScoreboardTeam().also {
-        require(action < ScoreboardTeamAction.ADD_ENTITIES) { "Modify entities not supported" }
-
         it.teamName = name
         it.action = action
 
-        if (action != ScoreboardTeamAction.REMOVE) {
-//            it.displayName = displayName
-//            it.prefix = prefix
-//            it.suffix = suffix
-
-            it.displayComponent = displayComponent
+        if (action != ScoreboardTeamAction.REMOVE && action < ScoreboardTeamAction.ADD_ENTITIES) {
+            it.displayNameComponent = displayNameComponent
             it.prefixComponent = prefixComponent
             it.suffixComponent = suffixComponent
 
             it.collision = collision
             it.visibility = visibility
             it.color = color
+            it.flags = flags
         }
 
-        if (action == ScoreboardTeamAction.CREATE) {
+        if (action == ScoreboardTeamAction.CREATE || action >= ScoreboardTeamAction.ADD_ENTITIES) {
             it.entities = entities
         }
     }.sendOrSendAll(players)
@@ -85,3 +95,6 @@ class ProtocolScoreboardTeam(val name: String, entities: List<String>) : Protoco
     }
 
 }
+
+private val ProtocolScoreboardTeam.updateEntityAdd: (String) -> Unit get() = { _ -> sendUpdates(ScoreboardTeamAction.ADD_ENTITIES) }
+private val ProtocolScoreboardTeam.updateEntityRemove: (String) -> Unit get() = { _ -> sendUpdates(ScoreboardTeamAction.REMOVE_ENTITIES) }
