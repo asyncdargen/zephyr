@@ -1,8 +1,10 @@
 package dev.zephyr.protocol.scoreboard
 
 import dev.zephyr.protocol.ProtocolObject
+import dev.zephyr.util.bukkit.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
+import net.kyori.adventure.text.Component
 import org.apache.commons.lang3.RandomStringUtils
 import org.bukkit.entity.Player
 
@@ -13,6 +15,8 @@ class ProtocolScoreboard(val name: String = RandomStringUtils.randomAlphanumeric
     val objective = ProtocolScoreboardObjective(name)
 
     var title by observable("") { _, value -> objective.title = value }
+    var titleComponent: Component by observable(title.toComponent()) { _, value -> objective.titleComponent = value }
+
     val lines: MutableMap<Int, String> = hashMapOf()
 
     fun getLine(index: Int) = lines[index]

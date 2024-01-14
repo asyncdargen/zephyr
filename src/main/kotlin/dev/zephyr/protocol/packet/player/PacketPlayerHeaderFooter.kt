@@ -10,4 +10,7 @@ class PacketPlayerHeaderFooter : ProtocolPacket(PacketPlayOutType.PLAYER_LIST_HE
     var header by writer(0, chatComponents, ChatComponentMapper)
     var footer by writer(1, chatComponents, ChatComponentMapper)
 
+    var headerComponent by writer(0, chatComponents, KyoriComponentMapper)
+    var footerComponent by writer(1, chatComponents, KyoriComponentMapper)
+
 }

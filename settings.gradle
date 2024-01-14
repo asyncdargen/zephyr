@@ -8,3 +8,5 @@ pluginManagement {
 rootProject.name = 'zephyr'
 
 include 'test-plugin' //nothing
+include 'Test'
+

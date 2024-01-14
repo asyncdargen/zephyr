@@ -19,9 +19,13 @@ class PacketScoreboardTeam : ProtocolPacket(PacketPlayOutType.SCOREBOARD_TEAM) {
 
     val structure by lazy { optionalStructures.read(0).get() }
 
-    var displayName by writer(0, structure.chatComponents, WrappedChatComponent::fromLegacyText)
-    var prefix by writer(1, structure.chatComponents, WrappedChatComponent::fromLegacyText)
-    var suffix by writer(2, structure.chatComponents, WrappedChatComponent::fromLegacyText)
+    var displayName by writer(0, structure.chatComponents, ChatComponentMapper)
+    var prefix by writer(1, structure.chatComponents, ChatComponentMapper)
+    var suffix by writer(2, structure.chatComponents, ChatComponentMapper)
+
+    var displayComponent by writer(0, structure.chatComponents, KyoriComponentMapper)
+    var prefixComponent by writer(1, structure.chatComponents, KyoriComponentMapper)
+    var suffixComponent by writer(2, structure.chatComponents, KyoriComponentMapper)
 
     var visibility by writer(0, structure.strings, ScoreboardTeamTagVisibility::handleName)
     var collision by writer(1, structure.strings, ScoreboardTeamCollision::handleName)

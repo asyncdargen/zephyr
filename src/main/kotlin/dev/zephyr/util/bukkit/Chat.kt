@@ -1,8 +1,10 @@
 package dev.zephyr.util.bukkit
 
+import com.comphenix.protocol.wrappers.WrappedChatComponent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.md_5.bungee.api.chat.TextComponent
 
@@ -25,6 +27,10 @@ fun String?.toComponent() = this?.let { component ->
         .toTypedArray()
         .let(Component::textOfChildren)
 } ?: Component.empty()
+
+fun Component.toWrappedChatComponent(): WrappedChatComponent = JSONComponentSerializer.json().serialize(this).let {
+    WrappedChatComponent.fromJson(it)
+}
 
 fun Collection<Component>.toTextList() = map(Component::toText)
 

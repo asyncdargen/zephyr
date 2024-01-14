@@ -3,6 +3,10 @@ package dev.zephyr.protocol.entity.world.display
 import com.comphenix.protocol.wrappers.WrappedChatComponent
 import dev.zephyr.protocol.entity.metadata.MetadataType
 import dev.zephyr.protocol.entity.type.display.TextDisplayAlignment
+import dev.zephyr.protocol.packet.ProtocolPacket
+import dev.zephyr.protocol.packet.ProtocolPacket.Companion.ChatComponentMapper
+import dev.zephyr.protocol.packet.ProtocolPacket.Companion.KyoriComponentMapper
+import dev.zephyr.util.bukkit.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.Location
 import org.bukkit.entity.EntityType
@@ -10,7 +14,9 @@ import org.bukkit.entity.EntityType
 @KotlinOpens
 class ProtocolTextDisplay(location: Location) : ProtocolDisplay(location, EntityType.TEXT_DISPLAY) {
 
-    var text by metadata.item(22, MetadataType.ChatComponent, "", WrappedChatComponent::fromLegacyText)
+    var text by metadata.item(22, MetadataType.ChatComponent, "", ChatComponentMapper)
+    var textComponent by metadata.item(22, MetadataType.ChatComponent, "".toComponent(), KyoriComponentMapper)
+
     var lineWidth by metadata.item(23, MetadataType.Int, 200)
     var backgroundColor by metadata.item(24, MetadataType.Int, 0x40000000)
     var textOpacity by metadata.item(25, MetadataType.Byte, -1)

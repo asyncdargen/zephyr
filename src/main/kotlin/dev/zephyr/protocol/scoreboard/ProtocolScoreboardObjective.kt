@@ -5,8 +5,10 @@ import dev.zephyr.protocol.packet.scoreboard.PacketScoreboardDisplayObjective
 import dev.zephyr.protocol.packet.scoreboard.PacketScoreboardObjective
 import dev.zephyr.protocol.scoreboard.type.ScoreboardHealthDisplay
 import dev.zephyr.protocol.scoreboard.type.ScoreboardObjectiveAction
+import dev.zephyr.util.bukkit.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
+import net.kyori.adventure.text.Component
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import kotlin.properties.ReadWriteProperty
@@ -15,6 +17,7 @@ import kotlin.properties.ReadWriteProperty
 class ProtocolScoreboardObjective(val name: String, val displaySlot: DisplaySlot = DisplaySlot.PLAYER_LIST) : ProtocolObject() {
 
     var title by observable(name)
+    var titleComponent : Component by observable(title.toComponent())
     var healthDisplay by observable(ScoreboardHealthDisplay.INTEGER)
 
     protected val teamMap: MutableMap<String, ProtocolScoreboardTeam> = hashMapOf()
@@ -77,7 +80,8 @@ class ProtocolScoreboardObjective(val name: String, val displaySlot: DisplaySlot
         PacketScoreboardObjective().also {
             it.objectiveName = name
             it.healthDisplay = healthDisplay
-            it.displayName = title
+//            it.displayName = title
+            it.displayComponent = titleComponent
             it.action = action
         }.sendOrSendAll(players)
 
@@ -93,8 +97,7 @@ class ProtocolScoreboardObjective(val name: String, val displaySlot: DisplaySlot
         sendObjectiveDisplay(players.toList())
 
     protected final fun <V> observable(value: V): ReadWriteProperty<Any?, V> {
-        val observer: (V, V) -> Unit =
-            { _, _ -> sendObjective(ScoreboardObjectiveAction.UPDATE) } //fuck kotlin with recursion bug!!!!
+        val observer: (V, V) -> Unit = { _, _ -> sendObjective(ScoreboardObjectiveAction.UPDATE) }
         return observable(value, observer = observer)
     }
 

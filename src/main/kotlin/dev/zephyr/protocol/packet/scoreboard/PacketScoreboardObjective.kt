@@ -13,6 +13,8 @@ class PacketScoreboardObjective : ProtocolPacket(PacketPlayOutType.SCOREBOARD_OB
     var objectiveName by writer(0, strings)
     var action by writer(0, integers, ScoreboardObjectiveAction::ordinal)
     var healthDisplay by writer(0, getEnumModifier(ScoreboardHealthDisplay::class.java, 2))
-    var displayName by writer(0, chatComponents, WrappedChatComponent::fromLegacyText)
+    var displayName by writer(0, chatComponents, ChatComponentMapper)
+
+    var displayComponent by writer(0, chatComponents, KyoriComponentMapper)
 
 }

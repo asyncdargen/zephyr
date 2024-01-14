@@ -5,7 +5,9 @@ import dev.zephyr.protocol.packet.scoreboard.PacketScoreboardTeam
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamAction
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
+import dev.zephyr.util.bukkit.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
+import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import java.util.*
@@ -36,6 +38,10 @@ class ProtocolScoreboardTeam(val name: String, entities: List<String>) : Protoco
     var prefix by observable("")
     var suffix by observable("")
 
+    var displayComponent: Component by observable(displayName.toComponent())
+    var prefixComponent: Component by observable(prefix.toComponent())
+    var suffixComponent: Component by observable(suffix.toComponent())
+
     override fun sendSpawnPackets(players: Collection<Player>) {
         sendUpdates(ScoreboardTeamAction.CREATE, players)
     }
@@ -51,9 +57,13 @@ class ProtocolScoreboardTeam(val name: String, entities: List<String>) : Protoco
         it.action = action
 
         if (action != ScoreboardTeamAction.REMOVE) {
-            it.displayName = displayName
-            it.prefix = prefix
-            it.suffix = suffix
+//            it.displayName = displayName
+//            it.prefix = prefix
+//            it.suffix = suffix
+
+            it.displayComponent = displayComponent
+            it.prefixComponent = prefixComponent
+            it.suffixComponent = suffixComponent
 
             it.collision = collision
             it.visibility = visibility

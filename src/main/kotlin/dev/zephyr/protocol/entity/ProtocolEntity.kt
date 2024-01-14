@@ -22,12 +22,14 @@ import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
 import dev.zephyr.util.bukkit.boundingBox
 import dev.zephyr.util.bukkit.clearAngles
 import dev.zephyr.util.bukkit.loadedByPlayers
+import dev.zephyr.util.bukkit.toWrappedChatComponent
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.collection.ifNotEmpty
 import dev.zephyr.util.collection.observe
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.cast
 import dev.zephyr.util.kotlin.observable
+import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.entity.EntityType
@@ -82,6 +84,13 @@ class ProtocolEntity(
     ) { Optional.ofNullable(it?.let(WrappedChatComponent::fromLegacyText)) } on {
         isCustomNameVisible = it.value != null
     }
+
+    var customNameComponent by metadata.item<Component?, Optional<WrappedChatComponent>>(
+        2, MetadataType.ChatComponentOptional, null
+    ) { Optional.ofNullable(it?.toWrappedChatComponent()) } on {
+        isCustomNameVisible = it.value != null
+    }
+
     var isCustomNameVisible by metadata.item(3, MetadataType.Boolean, false)
     var isSilent by metadata.item(4, MetadataType.Boolean, false)
     var isNoGravity by metadata.item(5, MetadataType.Boolean, false)

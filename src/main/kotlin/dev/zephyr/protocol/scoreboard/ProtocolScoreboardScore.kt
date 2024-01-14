@@ -32,7 +32,7 @@ class ProtocolScoreboardScore(val name: String, val objectiveName: String) : Pro
 
     protected final fun <V> observable(value: V): ReadWriteProperty<Any?, V> {
         val observer: (V, V) -> Unit =
-            { _, _ -> sendUpdates(ScoreboardAction.CHANGE) } //fuck kotlin with recursion bug!!!!
+            { _, _ -> sendUpdates(ScoreboardAction.CHANGE) }
         return dev.zephyr.util.kotlin.observable(value, observer = observer)
     }
 
