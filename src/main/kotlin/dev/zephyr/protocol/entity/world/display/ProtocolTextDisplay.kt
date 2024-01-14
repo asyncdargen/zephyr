@@ -6,6 +6,8 @@ import dev.zephyr.protocol.packet.ProtocolPacket.Companion.StringChatComponentMa
 import dev.zephyr.protocol.packet.ProtocolPacket.Companion.ChatComponentMapper
 import dev.zephyr.util.bukkit.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Location
 import org.bukkit.entity.EntityType
 
@@ -13,7 +15,7 @@ import org.bukkit.entity.EntityType
 class ProtocolTextDisplay(location: Location) : ProtocolDisplay(location, EntityType.TEXT_DISPLAY) {
 
     var text by metadata.item(22, MetadataType.Chat, "", StringChatComponentMapper)
-    var textComponent by metadata.item(22, MetadataType.Chat, "".toComponent(), ChatComponentMapper)
+    var textComponent by metadata.item(22, MetadataType.Chat, MiniMessage.miniMessage().deserialize(""), ChatComponentMapper)
 
     var lineWidth by metadata.item(23, MetadataType.Int, 200)
     var backgroundColor by metadata.item(24, MetadataType.Int, 0x40000000)
