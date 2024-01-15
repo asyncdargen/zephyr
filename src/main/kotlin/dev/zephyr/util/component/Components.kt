@@ -2,8 +2,11 @@ package dev.zephyr.util.component
 
 import com.comphenix.protocol.wrappers.WrappedChatComponent
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+
+
 
 fun Component.literal() = LegacyComponentSerializer.legacySection().serialize(this)
 
@@ -13,6 +16,9 @@ fun String?.toComponent() = this?.let(LegacyComponentSerializer.legacySection():
 
 fun Iterable<String>.toComponents() = map(String::toComponent)
 
+fun String?.miniComponent() = this?.let(MiniMessage.miniMessage()::deserialize) ?: Component.empty()
+
+fun Iterable<String>.miniComponents() = map(String::miniComponent)
 
 fun WrappedChatComponent.unwrap() = GsonComponentSerializer.gson().deserialize(json)
 
