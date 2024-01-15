@@ -29,7 +29,6 @@ class ComponentBuilder(var component: Component) {
 
     fun append(component: Component, block: ComponentBuilder.() -> Unit = {}) {
         this.component = this.component.append(component(component, block))
-        println(this.component)
     }
 
     fun append(text: String, block: ComponentBuilder.() -> Unit = {}) = append(text.toComponent(), block)
