@@ -2,6 +2,8 @@ package dev.zephyr.protocol.scoreboard.builder
 
 import dev.zephyr.protocol.scoreboard.ProtocolScoreboard
 import dev.zephyr.protocol.scoreboard.ScoreboardProtocol
+import dev.zephyr.protocol.scoreboard.builder.ProtocolScoreboardBuilder.LazyProtocolScoreboardLine
+import dev.zephyr.protocol.scoreboard.builder.ProtocolScoreboardBuilder.StaticProtocolScoreboardLine
 import dev.zephyr.util.collection.filterValuesIsInstance
 import dev.zephyr.util.concurrent.threadLocal
 import org.bukkit.entity.Player
@@ -24,12 +26,11 @@ class ProtocolScoreboardBuilderHolder<U>(
 
         title = builder.title
 
-        scoreboardLines.filterValuesIsInstance<Int, ProtocolScoreboardBuilder.StaticProtocolScoreboardLine>()
-            .forEach { (index, line) ->
-                setLine(index, line.getContent(player))
-            }
+        scoreboardLines.filterValuesIsInstance<Int, StaticProtocolScoreboardLine>().forEach { (index, line) ->
+            setLine(index, line.getContent(player))
+        }
 
-        scoreboardLines.filterValuesIsInstance<Int, ProtocolScoreboardBuilder.LazyProtocolScoreboardLine>()
+        scoreboardLines.filterValuesIsInstance<Int, LazyProtocolScoreboardLine>()
             .asSequence()
             .groupBy { it.value.interval }
             .forEach { (interval, lines) ->

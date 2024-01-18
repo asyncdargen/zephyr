@@ -5,6 +5,8 @@ import com.comphenix.protocol.wrappers.EnumWrappers.PlayerInfoAction
 import com.comphenix.protocol.wrappers.PlayerInfoData
 import com.comphenix.protocol.wrappers.WrappedChatComponent
 import com.comphenix.protocol.wrappers.WrappedGameProfile
+import dev.zephyr.hook.animation.PlayerItemAnimationHolder
+import dev.zephyr.hook.vehicle.ProtocolPlayerVehicleSupport
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.packet.player.PacketGameEvent
@@ -40,6 +42,11 @@ object PlayerHooks {
         .declaredFields
         .first { it.type == DataWatcherObject::class.java }
         .tryAccessAndGet<DataWatcherObject<Float>>()
+
+    init {
+        ProtocolPlayerVehicleSupport
+        PlayerItemAnimationHolder
+    }
 
     fun hideHealth() {
         on<PlayerJoinEvent>(EventPriority.LOWEST) { player.hideHealth() }

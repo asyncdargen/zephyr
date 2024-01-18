@@ -7,10 +7,11 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 
 
-
 fun Component.literal() = LegacyComponentSerializer.legacySection().serialize(this)
 
 fun Iterable<Component>.literal() = map(Component::literal)
+
+fun Any?.asComponent() = this as? Component ?: this?.toString().toComponent()
 
 fun String?.toComponent() = this?.let(LegacyComponentSerializer.legacySection()::deserialize) ?: Component.empty()
 

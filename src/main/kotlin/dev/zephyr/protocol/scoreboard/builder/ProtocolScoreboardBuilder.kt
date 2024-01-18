@@ -1,6 +1,7 @@
 package dev.zephyr.protocol.scoreboard.builder
 
 import dev.zephyr.protocol.scoreboard.ProtocolScoreboard
+import dev.zephyr.util.component.asComponent
 import dev.zephyr.util.component.components
 import dev.zephyr.util.component.literal
 import dev.zephyr.util.component.toComponent
@@ -78,8 +79,23 @@ class ProtocolScoreboardBuilder<U>(var updaterEntity: (Player) -> U) {
 
     fun line() = line(EmptyProtocolScoreboardLine)
 
+    fun lines(vararg lines: Any) = lines.map {
+        when (it) {
+            is ProtocolScoreboardLine -> it
+            is Component -> StaticProtocolScoreboardLine(it)
+            is String -> if (it.isEmpty()) EmptyProtocolScoreboardLine else StaticProtocolScoreboardLine(it.toComponent())
+            else -> StaticProtocolScoreboardLine(it.asComponent())
+        }
+    }.forEach(this::line)
+
     fun updater(interval: Int = 20, block: ProtocolScoreboard.(Player) -> Unit) =
         apply { updaters.add(interval to block) }
+
+    operator fun String.invoke(interval: Int = 20, block: (U) -> Any) =
+        LazyWrappedProtocolScoreboardLine(toComponent(), Component.empty(), interval) { block(updaterEntity(it)).asComponent() }
+
+    operator fun Component.invoke(interval: Int = 20, block: (U) -> Any) =
+        LazyWrappedProtocolScoreboardLine(this, Component.empty(), interval) { block(updaterEntity(it)).asComponent() }
 
 
     interface ProtocolScoreboardLine {
@@ -126,5 +142,5 @@ fun <P> scoreboard(updaterEntity: (Player) -> P, block: ProtocolScoreboardBuilde
     ProtocolScoreboardBuilderHolder(block, updaterEntity)
 
 fun scoreboard(block: ProtocolScoreboardBuilder<Player>.() -> Unit) =
-    scoreboard({it}, block)
+    scoreboard({ it }, block)
 
