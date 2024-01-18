@@ -18,12 +18,12 @@ import kotlin.properties.ReadWriteProperty
 class ProtocolScoreboardObjective(val name: String, val displaySlot: DisplaySlot = DisplaySlot.SIDEBAR) :
     ProtocolObject() {
 
-    var title: String
-        get() = titleComponent.literal()
+    var titleString: String
+        get() = title.literal()
         set(value) {
-            titleComponent = value.toComponent()
+            title = value.toComponent()
         }
-    var titleComponent by observable<Component>(Component.empty())
+    var title by observable<Component>(Component.empty())
     var healthDisplay by observable(ScoreboardHealthDisplay.INTEGER)
 
     protected val teamMap: MutableMap<String, ProtocolScoreboardTeam> = hashMapOf()
@@ -86,7 +86,7 @@ class ProtocolScoreboardObjective(val name: String, val displaySlot: DisplaySlot
         PacketScoreboardObjective().also {
             it.objectiveName = name
             it.healthDisplay = healthDisplay
-            it.displayNameComponent = titleComponent
+            it.displayNameComponent = title
             it.action = action
         }.sendOrSendAll(players)
 

@@ -37,25 +37,25 @@ class ProtocolScoreboardTeam(val name: String, entities: List<String>) : Protoco
     var color by observable(ChatColor.RESET)
     var flags by observable(0)
 
-    var displayName: String
+    var displayNameString: String
         set(value) {
-            displayNameComponent = value.toComponent()
+            this.displayName = value.toComponent()
         }
-        get() = displayNameComponent.literal()
-    var prefix: String
+        get() = this.displayName.literal()
+    var prefixString: String
         set(value) {
-            prefixComponent = value.toComponent()
+            prefix = value.toComponent()
         }
-        get() = prefixComponent.literal()
-    var suffix: String
+        get() = prefix.literal()
+    var suffixString: String
         set(value) {
-            suffixComponent = value.toComponent()
+            suffix = value.toComponent()
         }
-        get() = suffixComponent.literal()
+        get() = suffix.literal()
 
-    var displayNameComponent by observable<Component>(Component.empty())
-    var prefixComponent by observable<Component>(Component.empty())
-    var suffixComponent by observable<Component>(Component.empty())
+    var displayName by observable<Component>(Component.empty())
+    var prefix by observable<Component>(Component.empty())
+    var suffix by observable<Component>(Component.empty())
 
     override fun sendSpawnPackets(players: Collection<Player>) {
         sendUpdates(ScoreboardTeamAction.CREATE, players)
@@ -70,9 +70,9 @@ class ProtocolScoreboardTeam(val name: String, entities: List<String>) : Protoco
         it.action = action
 
         if (action != ScoreboardTeamAction.REMOVE && action < ScoreboardTeamAction.ADD_ENTITIES) {
-            it.displayNameComponent = displayNameComponent
-            it.prefixComponent = prefixComponent
-            it.suffixComponent = suffixComponent
+            it.displayNameComponent = this.displayName
+            it.prefixComponent = prefix
+            it.suffixComponent = suffix
 
             it.collision = collision
             it.visibility = visibility

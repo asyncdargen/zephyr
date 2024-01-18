@@ -1,6 +1,6 @@
 package dev.zephyr.protocol.scoreboard
 
-import dev.zephyr.protocol.scoreboard.builder.ProtocolScoreboardBuilder
+import dev.zephyr.protocol.scoreboard.builder.ProtocolScoreboardBuilderHolder
 import dev.zephyr.util.bukkit.on
 import dev.zephyr.util.collection.concurrentHashMapOf
 import org.bukkit.entity.Player
@@ -9,19 +9,17 @@ import org.bukkit.event.player.PlayerQuitEvent
 
 object ScoreboardProtocol {
 
-    lateinit var BoundedScoreboard: ProtocolScoreboardBuilder
+    lateinit var BoundedScoreboard: ProtocolScoreboardBuilderHolder<*>
     val PlayerScoreboards = concurrentHashMapOf<Player, ProtocolScoreboard>()
 
     init {
         on<PlayerJoinEvent> {
-            if (this@ScoreboardProtocol::BoundedScoreboard.isInitialized) {
-                BoundedScoreboard.create(player)
-            }
+            if (this@ScoreboardProtocol::BoundedScoreboard.isInitialized) BoundedScoreboard.create(player)
         }
         on<PlayerQuitEvent> { remove(player) }
     }
 
-    fun bind(builder: ProtocolScoreboardBuilder) {
+    fun bind(builder: ProtocolScoreboardBuilderHolder<*>) {
         BoundedScoreboard = builder
     }
 

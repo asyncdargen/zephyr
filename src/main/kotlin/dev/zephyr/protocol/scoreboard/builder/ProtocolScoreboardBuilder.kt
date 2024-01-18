@@ -1,45 +1,78 @@
 package dev.zephyr.protocol.scoreboard.builder
 
 import dev.zephyr.protocol.scoreboard.ProtocolScoreboard
-import dev.zephyr.protocol.scoreboard.ScoreboardProtocol
-import dev.zephyr.util.collection.filterValuesIsInstance
+import dev.zephyr.util.component.components
+import dev.zephyr.util.component.literal
 import dev.zephyr.util.component.toComponent
 import dev.zephyr.util.kotlin.KotlinOpens
+import dev.zephyr.util.kotlin.map
+import net.kyori.adventure.text.Component
 import org.bukkit.entity.Player
 
 @KotlinOpens
-class ProtocolScoreboardBuilder() {
-    constructor(block: ProtocolScoreboardBuilder.() -> Unit) : this() {
-        block(this)
-    }
+class ProtocolScoreboardBuilder<U>(var updaterEntity: (Player) -> U) {
 
-    var title = "Scoreboard"
+    var title: Component = Component.text("")
+    var titleString: String
+        set(value) {
+            title = value.toComponent()
+        }
+        get() = title.literal()
+
     val lines = mutableMapOf<Int, ProtocolScoreboardLine>()
 
     var invertIndexes = true
     val updaters = mutableSetOf<Pair<Int, ProtocolScoreboard.(Player) -> Unit>>()
 
-    fun title(title: String) = apply { this.title = title }
+    fun title(component: Component) = apply { this.title = title }
+
+    fun title(title: String) = title(title.toComponent())
 
     fun line(index: Int, line: ProtocolScoreboardLine) = apply { lines[index] = line }
 
     fun line(line: ProtocolScoreboardLine) = line((lines.keys.maxOrNull() ?: 0) + 1, line)
 
-    fun line(index: Int, line: String) = line(index, StaticProtocolScoreboardLine(line))
+    fun line(index: Int, line: Component) = line(index, StaticProtocolScoreboardLine(line))
 
-    fun line(line: String) = line(StaticProtocolScoreboardLine(line))
+    fun line(index: Int, line: String) = line(index, line.toComponent())
 
-    fun line(index: Int, interval: Int = 20, lineSupplier: (Player) -> String) =
-        line(index, LazyProtocolScoreboardLine(interval, lineSupplier))
+    fun line(line: Component) = line(StaticProtocolScoreboardLine(line))
 
-    fun line(interval: Int = 20, lineSupplier: (Player) -> String) =
-        line(LazyProtocolScoreboardLine(interval, lineSupplier))
+    fun line(line: String) = line(line.toComponent())
 
-    fun line(index: Int, prefix: String, suffix: String = "", interval: Int = 20, lineSupplier: (Player) -> String) =
-        line(index, LazyWrappedProtocolScoreboardLine(prefix, suffix, interval, lineSupplier))
+    fun line(index: Int, interval: Int = 20, lineSupplier: (U) -> Component) =
+        line(index, LazyProtocolScoreboardLine(interval) { lineSupplier(updaterEntity(it)) })
 
-    fun line(prefix: String, suffix: String = "", interval: Int = 20, lineSupplier: (Player) -> String) =
-        line(LazyWrappedProtocolScoreboardLine(prefix, suffix, interval, lineSupplier))
+    fun lineString(index: Int, interval: Int = 20, lineSupplier: (U) -> String) =
+        line(index, interval, lineSupplier.map(String::toComponent))
+
+    fun line(interval: Int = 20, supplier: (U) -> Component) =
+        line(LazyProtocolScoreboardLine(interval) { supplier(updaterEntity(it)) })
+
+    fun lineString(interval: Int = 20, lineSupplier: (U) -> String) =
+        line(interval, lineSupplier.map(String::toComponent))
+
+    fun line(
+        index: Int,
+        prefix: Component, suffix: Component = Component.empty(),
+        interval: Int = 20, lineSupplier: (U) -> Component
+    ) = line(index, LazyWrappedProtocolScoreboardLine(prefix, suffix, interval) { lineSupplier(updaterEntity(it)) })
+
+    fun lineString(
+        index: Int,
+        prefix: String, suffix: String = "",
+        interval: Int = 20, lineSupplier: (U) -> String
+    ) = line(index, prefix.toComponent(), suffix.toComponent(), interval, lineSupplier.map(String::toComponent))
+
+    fun line(
+        prefix: Component, suffix: Component = Component.empty(),
+        interval: Int = 20, lineSupplier: (U) -> Component
+    ) = line(LazyWrappedProtocolScoreboardLine(prefix, suffix, interval) { lineSupplier(updaterEntity(it)) })
+
+    fun lineString(
+        prefix: String, suffix: String = "",
+        interval: Int = 20, lineSupplier: (U) -> String
+    ) = line(prefix.toComponent(), suffix.toComponent(), interval, lineSupplier.map(String::toComponent))
 
     fun line(index: Int) = line(index, EmptyProtocolScoreboardLine)
 
@@ -48,68 +81,50 @@ class ProtocolScoreboardBuilder() {
     fun updater(interval: Int = 20, block: ProtocolScoreboard.(Player) -> Unit) =
         apply { updaters.add(interval to block) }
 
-    fun create(player: Player): ProtocolScoreboard {
-        return ProtocolScoreboard(title).apply {
-            val lines = this@ProtocolScoreboardBuilder.lines.run {
-                if (invertIndexes) {
-                    val maxIndex = keys.maxOrNull() ?: 0
-                    mapKeys { (index, _) -> maxIndex - index }
-                } else this
-            }
-
-            title = this@ProtocolScoreboardBuilder.title.toComponent()
-
-            lines.filterValuesIsInstance<Int, StaticProtocolScoreboardLine>().forEach { (index, line) ->
-                setLine(index, line.getContent(player))
-            }
-
-            lines.filterValuesIsInstance<Int, LazyProtocolScoreboardLine>().forEach { (index, line) ->
-                taskContext.everyAsync(0, line.interval) { setLine(index, line.getContent(player)) }
-            }
-
-            updaters.forEach { (interval, updater) ->
-                taskContext.everyAsync(0, interval) { updater(this, player) }
-            }
-
-            ScoreboardProtocol[player] = this
-            spawn(player)
-        }
-    }
-
-    fun bind() = ScoreboardProtocol.bind(this)
 
     interface ProtocolScoreboardLine {
 
-        fun getContent(player: Player): String
+        fun getContent(player: Player): Component
 
     }
 
     @KotlinOpens
-    class StaticProtocolScoreboardLine(private val content: String) : ProtocolScoreboardLine {
+    class StaticProtocolScoreboardLine(private val content: Component) : ProtocolScoreboardLine {
 
         override fun getContent(player: Player) = content
 
     }
 
-    object EmptyProtocolScoreboardLine : StaticProtocolScoreboardLine("")
+    object EmptyProtocolScoreboardLine : StaticProtocolScoreboardLine(Component.empty())
 
     @KotlinOpens
-    class LazyProtocolScoreboardLine(val interval: Int, val supplier: (Player) -> String) : ProtocolScoreboardLine {
+    class LazyProtocolScoreboardLine(val interval: Int, val supplier: (Player) -> Component) : ProtocolScoreboardLine {
 
         override fun getContent(player: Player) = supplier(player)
 
     }
 
     @KotlinOpens
-    class LazyWrappedProtocolScoreboardLine(val prefix: String, val suffix: String, interval: Int, supplier: (Player) -> String) :
-        LazyProtocolScoreboardLine(interval, supplier) {
+    class LazyWrappedProtocolScoreboardLine(
+        val prefix: Component,
+        val suffix: Component,
+        interval: Int,
+        supplier: (Player) -> Component
+    ) : LazyProtocolScoreboardLine(interval, supplier) {
 
-        override fun getContent(player: Player) = "$prefix${super.getContent(player)}$suffix"
+        val base = components(prefix, suffix)
+
+        override fun getContent(player: Player) =
+            base.replaceText { it.matchLiteral("{}").replacement(super.getContent(player)) }
 
     }
 
 
 }
 
-fun scoreboard(block: ProtocolScoreboardBuilder.() -> Unit) =
-    ProtocolScoreboardBuilder(block)
+fun <P> scoreboard(updaterEntity: (Player) -> P, block: ProtocolScoreboardBuilder<P>.() -> Unit) =
+    ProtocolScoreboardBuilderHolder(block, updaterEntity)
+
+fun scoreboard(block: ProtocolScoreboardBuilder<Player>.() -> Unit) =
+    scoreboard({it}, block)
+
