@@ -20,6 +20,8 @@ import dev.zephyr.tab.TabPlayer.Properties.tagFactory
 import dev.zephyr.tab.TabPlayer.Properties.tagSelfAccess
 import dev.zephyr.tab.TabPlayer.Properties.teamFactory
 import dev.zephyr.util.bukkit.clearAngles
+import dev.zephyr.util.component.components
+import dev.zephyr.util.component.literal
 import dev.zephyr.util.component.toComponent
 import dev.zephyr.util.component.wrap
 import dev.zephyr.util.kotlin.observable
@@ -38,10 +40,10 @@ class TabPlayer(val player: Player) {
     var dirtyName = true
 
     var order by observable(0, true) { _, _ -> dirtyTeam = true }
+
     var displayName by observable<Component>(player.name.toComponent(), true) { _, _ -> dirtyName = true }
     var header by observable<Component>(Component.empty(), true) { _, _ -> dirtyHeaderFooter = true }
     var footer by observable<Component>(Component.empty(), true) { _, _ -> dirtyHeaderFooter = true }
-
     var tagName: Component
         get() = container.tag.text
         set(value) {
@@ -49,6 +51,79 @@ class TabPlayer(val player: Player) {
                 container.tag.text = value
             }
         }
+
+    var displayNameString: String
+        get() = displayName.literal()
+        set(value) {
+            displayName = value.toComponent()
+        }
+    var headerString: String
+        get() = header.literal()
+        set(value) {
+            header = value.toComponent()
+        }
+    var footerString: String
+        get() = footer.literal()
+        set(value) {
+            footer = value.toComponent()
+        }
+    var tagNameString: String
+        get() = tagName.literal()
+        set(value) {
+            tagName = value.toComponent()
+        }
+
+    fun tagLines(vararg lines: Component) {
+        tagName = components(*lines)
+    }
+
+    fun tagStringLines(vararg lines: String) {
+        tagName = components(*lines)
+    }
+
+    fun update(force: Boolean = false) {
+        if (!container.tag.isRegistered()) with(container.tag) {
+            access {
+                (tagSelfAccess || player !== it) && tagAccessor(player, it) && it.canSee(player) && !player.isDead
+                        && (player.gameMode == GameMode.SPECTATOR && player.gameMode == it.gameMode || player.gameMode != GameMode.SPECTATOR)
+            }
+            register()
+            player.mount(this)
+        }
+
+        if (dirtyHeaderFooter) PacketPlayerHeaderFooter().also {
+            dirtyHeaderFooter = false
+            it.header = header
+            it.footer = footer
+        }.send(player)
+
+        if (dirtyTeam) {
+            dirtyTeam = false
+            container.recreateTeam().broadcastSpawn()
+        }
+
+        if (dirtyName) {
+            container.removeProfile()
+            if (force) {
+                dirtyName = false
+                PacketPlayerInfoUpdate.single(
+                    container.getOrCreateProfile(),
+                    PlayerInfoAction.UPDATE_DISPLAY_NAME
+                ).broadcast()
+            }
+        }
+    }
+
+    fun force(block: TabPlayer.() -> Unit) {
+        block()
+        update(true)
+    }
+
+    fun remove() {
+        container.tag.remove()
+        container.removeTeam()
+        container.removeProfile()
+    }
 
     inner class ProtocolContainer {
 
@@ -96,50 +171,6 @@ class TabPlayer(val player: Player) {
             return getOrCreateProfile()
         }
 
-    }
-
-    fun update(force: Boolean = false) {
-        if (!container.tag.isRegistered()) with(container.tag) {
-            access {
-                (tagSelfAccess || player !== it) && tagAccessor(player, it) && it.canSee(player) && !player.isDead
-                        && (player.gameMode == GameMode.SPECTATOR && player.gameMode == it.gameMode || player.gameMode != GameMode.SPECTATOR)
-            }
-            register()
-            player.mount(this)
-        }
-
-        if (dirtyHeaderFooter) PacketPlayerHeaderFooter().also {
-            dirtyHeaderFooter = false
-            it.header = header
-            it.footer = footer
-        }.send(player)
-
-        if (dirtyTeam) {
-            dirtyTeam = false
-            container.recreateTeam().broadcastSpawn()
-        }
-
-        if (dirtyName) {
-            container.removeProfile()
-            if (force) {
-                dirtyName = false
-                PacketPlayerInfoUpdate.single(
-                    container.getOrCreateProfile(),
-                    PlayerInfoAction.UPDATE_DISPLAY_NAME
-                ).broadcast()
-            }
-        }
-    }
-
-    fun force(block: TabPlayer.() -> Unit) {
-        block()
-        update(true)
-    }
-
-    fun remove() {
-        container.tag.remove()
-        container.removeTeam()
-        container.removeProfile()
     }
 
     object Properties {

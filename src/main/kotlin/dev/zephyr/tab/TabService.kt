@@ -30,7 +30,7 @@ object TabService {
         on<PlayerJoinEvent> { queueLock.use { queued.add(player) } }
         on<PlayerQuitEvent> { players.remove(player)?.remove() }
 
-        on<PlayerToggleSneakEvent> { get(player)?.container?.resneakTag(isSneaking) }
+        on<PlayerToggleSneakEvent> { getSafe(player)?.container?.resneakTag(isSneaking) }
 
         everyAsync(1, 1) {
             var queued: Collection<TabPlayer> = emptyList()
@@ -45,13 +45,14 @@ object TabService {
             players.values.forEach { tab -> tab.update() }
             collectProfilePacket(queued.isNotEmpty())?.broadcast()
         }
-//        updater(1) { container.resneakTag(player.isSneaking) }
     }
 
     fun updater(interval: Int = 20, block: TabPlayer.() -> Unit) =
         everyAsync(interval, interval) { players.values.forEach(block) }
 
-    operator fun get(player: Player) = players[player]
+    fun getSafe(player: Player) = players[player]
+
+    operator fun get(player: Player) = getSafe(player)!!
 
     private fun collectProfilePacket(force: Boolean = false): PacketPlayerInfoUpdate? =
         players.values.filter { force || it.dirtyName }
