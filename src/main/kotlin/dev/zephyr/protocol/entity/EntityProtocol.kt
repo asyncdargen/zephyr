@@ -44,13 +44,6 @@ object EntityProtocol {
                 entity.clickHandler(entity, player, action)
             }
         }
-//
-//        on<PlayerTeleportEvent> {
-//            val entities = setOf(player)
-//            Entities.forEach { it.destroy(entities) }
-//
-//            setDelay("entity_protocol_teleport_${player.name}", 1000)
-//        }
         on<PlayerChunkUnloadEvent> {
             getEntitiesInChunk(chunk)
                 .filter { it.isSpawned(player) }

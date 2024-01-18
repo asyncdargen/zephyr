@@ -405,7 +405,7 @@ class ProtocolEntity(
 
     fun refreshViewers() {
         viewers
-            .filterNot(this::hasAccess)
+            .filterNot { hasAccess(it) || it !in chunkPointer.loadedByPlayers }
             .ifNotEmpty(this::destroy)
 
         spawnLocal()
@@ -424,9 +424,6 @@ class ProtocolEntity(
     }
 
 }
-
-inline fun <reified E : ProtocolEntity> protocolEntity(location: Location) =
-    E::class.java.declaredConstructors.first { it.parameterTypes.first() == Location::class }.newInstance(location)
 
 fun <E : ProtocolEntity> E.register() = apply { registerEntity() }
 

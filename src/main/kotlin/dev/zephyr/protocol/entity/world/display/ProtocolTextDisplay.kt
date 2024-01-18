@@ -13,12 +13,12 @@ import org.bukkit.entity.EntityType
 @KotlinOpens
 class ProtocolTextDisplay(location: Location) : ProtocolDisplay(location, EntityType.TEXT_DISPLAY) {
 
-    var text: String
-        get() = textComponent.literal()
+    var textString: String
+        get() = text.literal()
         set(value) {
-            textComponent = value.toComponent()
+            text = value.toComponent()
         }
-    var textComponent: Component by metadata.item(22, MetadataType.Chat, Component.empty(), ChatComponentMapper)
+    var text: Component by metadata.item(22, MetadataType.Chat, Component.empty(), ChatComponentMapper)
 
     var lineWidth by metadata.item(23, MetadataType.Int, 200)
     var backgroundColor by metadata.item(24, MetadataType.Int, 0x40000000)

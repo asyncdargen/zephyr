@@ -4,6 +4,7 @@ import dev.zephyr.event.EventContext
 import dev.zephyr.event.GlobalEventContext
 import dev.zephyr.protocol.packet.ProtocolPacket
 import dev.zephyr.task.GlobalTaskContext
+import dev.zephyr.util.bukkit.players
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.entity.Player
@@ -25,6 +26,8 @@ abstract class ProtocolObject  {
 
     fun isSpawned(player: Player) = player in viewers
 
+    fun broadcastSpawn() = spawn(players())
+
     @Synchronized
     fun spawn(players: Collection<Player>) {
         if (players.isEmpty()) {
@@ -42,6 +45,8 @@ abstract class ProtocolObject  {
 
     fun sendSpawnPackets(vararg players: Player) =
         sendSpawnPackets(players.toList())
+
+    fun broadcastDestroy() = destroy(players())
 
     @Synchronized
     fun destroy(players: Collection<Player>) {
