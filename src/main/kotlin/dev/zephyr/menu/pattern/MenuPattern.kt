@@ -9,7 +9,7 @@ import dev.zephyr.menu.pattern.supplier.StaticPatternItemSupplier
 import dev.zephyr.util.collection.concurrentHashMapOf
 import org.bukkit.inventory.ItemStack
 
-class MenuPattern(var pattern: String = "") : MenuDrawer<Menu> {
+class MenuPattern(var pattern: String = "", var offsetY: Int = 0, var offsetX: Int = 0) : MenuDrawer<Menu> {
 
     val supplierMap = concurrentHashMapOf<Char, PatternItemSupplier>()
 
@@ -17,7 +17,9 @@ class MenuPattern(var pattern: String = "") : MenuDrawer<Menu> {
         var index = 0
         pattern.lineSequence().forEachIndexed { row, line ->
             line.forEachIndexed { column, char ->
-                get(char)?.let { menu[index++] = it.supply(PatternIndex(row, column, index - 1)) } ?: index++
+                get(char)?.let {
+                    menu[row + offsetY, column + offsetX] = it.supply(PatternIndex(row, column, index++))
+                } ?: index++
             }
         }
     }
@@ -26,7 +28,6 @@ class MenuPattern(var pattern: String = "") : MenuDrawer<Menu> {
     operator fun get(char: Char) = supplierMap[char]
 
     fun remove(char: Char) = supplierMap.remove(char)
-
 
 
     operator fun set(char: Char, supplier: PatternItemSupplier) = supplierMap.put(char, supplier)
@@ -54,4 +55,5 @@ class MenuPattern(var pattern: String = "") : MenuDrawer<Menu> {
 
 }
 
-fun pattern(vararg lines: String, block: MenuPattern.() -> Unit) = MenuPattern(lines.joinToString("\n")).apply(block)
+fun pattern(vararg lines: String, offsetY: Int, offsetX: Int, block: MenuPattern.() -> Unit) =
+    MenuPattern(lines.joinToString("\n"), offsetY, offsetX).apply(block)
