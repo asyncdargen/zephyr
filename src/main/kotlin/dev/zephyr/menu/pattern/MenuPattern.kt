@@ -55,5 +55,5 @@ class MenuPattern(var pattern: String = "", var offsetY: Int = 0, var offsetX: I
 
 }
 
-fun pattern(vararg lines: String, offsetY: Int, offsetX: Int, block: MenuPattern.() -> Unit) =
+fun pattern(vararg lines: String, offsetY: Int = 0, offsetX: Int = 0, block: MenuPattern.() -> Unit) =
     MenuPattern(lines.joinToString("\n"), offsetY, offsetX).apply(block)

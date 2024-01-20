@@ -10,7 +10,6 @@ import org.bukkit.entity.Player
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 
-
 fun world(name: String = "world") = Bukkit.getWorld(name)
 
 fun World.craft() = cast<CraftWorld>()

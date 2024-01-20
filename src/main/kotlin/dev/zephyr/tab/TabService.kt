@@ -47,7 +47,7 @@ object TabService {
         }
     }
 
-    fun updater(interval: Int = 20, block: TabPlayer.() -> Unit) =
+    fun updater(interval: Long = 20, block: TabPlayer.() -> Unit) =
         everyAsync(interval, interval) { players.values.forEach(block) }
 
     fun getSafe(player: Player) = players[player]

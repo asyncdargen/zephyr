@@ -1,10 +1,10 @@
 package dev.zephyr.task
 
-import dev.zephyr.Zephyr
+import dev.zephyr.Zephyr.Plugin
 import dev.zephyr.util.concurrent.threadLocal
+import dev.zephyr.util.java.catch
 import dev.zephyr.util.kotlin.KotlinOpens
-import org.bukkit.scheduler.BukkitRunnable
-import org.bukkit.scheduler.BukkitTask
+import org.bukkit.Bukkit.getScheduler
 import java.util.logging.Level
 
 val TickingTasks = threadLocal<Task>()
@@ -13,44 +13,44 @@ fun currentTask() = TickingTasks.get()
 
 @KotlinOpens
 class BukkitTask(
-    override val delay: Int,
-    override val period: Int = 0,
-    override var periods: Int,
-    override val sync: Boolean,
+    override val delay: Long = 0L,
+    override val period: Long = 0L,
+    override val repeats: Int,
+    override val isSync: Boolean,
+
     override val context: TaskContext,
-    override val action: (Task) -> Unit,
-    override var onTerminate: (Task) -> Unit = {  }
-) : Task, BukkitRunnable() {
 
-    private val handle: BukkitTask = when {
-        sync -> runTaskTimer(Zephyr.Plugin, delay.toLong(), period.toLong())
-        else -> runTaskTimerAsynchronously(Zephyr.Plugin, delay.toLong(), period.toLong())
+    override var action: (Task) -> Unit,
+    override var terminationHandler: (Task) -> Unit = { }
+) : Task {
+
+    private val handle = when {
+        isSync -> getScheduler().runTaskTimer(Plugin, this::execute, delay, period)
+        else -> getScheduler().runTaskTimerAsynchronously(Plugin, this::execute, delay, period)
     }
 
-    override val id by handle::taskId
-    override val isRunning get() = !isCancelled
+    override val id get() = handle.taskId
+    override val isCancelled get() = handle.isCancelled
 
-    override fun terminate() {
-        if (isRunning)
-            handle.cancel()
+    override var executions = 0
 
-        context.tasks.remove(id)
-
-        onTerminate(this)
-    }
-
-    override fun run() {
+    override fun execute() {
         TickingTasks.set(this)
-        runCatching(action::invoke).exceptionOrNull()?.let {
-            Zephyr.Logger.log(Level.WARNING, "Error while executing task ${handle.taskId}", it)
+        ++executions
+        catch("Error while task executing: $id", Level.WARNING) { action(this) }
+        if (repeats in 0..executions) {
+            cancel()
         }
         TickingTasks.remove()
-
-        if (periods == 0 || --periods == 0) terminate()
     }
 
     override fun cancel() {
-        terminate()
+        if (!isCancelled) {
+            handle.cancel()
+        }
+
+        context.tasks.remove(id)
+        catch("Error while processing task termination handler: $id") { terminationHandler(this) }
     }
 
 }

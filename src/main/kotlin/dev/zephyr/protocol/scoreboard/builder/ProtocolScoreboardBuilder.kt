@@ -23,7 +23,7 @@ class ProtocolScoreboardBuilder<U>(var updaterEntity: (Player) -> U) {
     val lines = mutableMapOf<Int, ProtocolScoreboardLine>()
 
     var invertIndexes = true
-    val updaters = mutableSetOf<Pair<Int, ProtocolScoreboard.(Player) -> Unit>>()
+    val updaters = mutableSetOf<Pair<Long, ProtocolScoreboard.(Player) -> Unit>>()
 
     fun title(component: Component) = apply { this.title = title }
 
@@ -41,38 +41,38 @@ class ProtocolScoreboardBuilder<U>(var updaterEntity: (Player) -> U) {
 
     fun line(line: String) = line(line.toComponent())
 
-    fun line(index: Int, interval: Int = 20, lineSupplier: (U) -> Component) =
+    fun line(index: Int, interval: Long = 20, lineSupplier: (U) -> Component) =
         line(index, LazyProtocolScoreboardLine(interval) { lineSupplier(updaterEntity(it)) })
 
-    fun lineString(index: Int, interval: Int = 20, lineSupplier: (U) -> String) =
+    fun lineString(index: Int, interval: Long = 20, lineSupplier: (U) -> String) =
         line(index, interval, lineSupplier.map(String::toComponent))
 
-    fun line(interval: Int = 20, supplier: (U) -> Component) =
+    fun line(interval: Long = 20, supplier: (U) -> Component) =
         line(LazyProtocolScoreboardLine(interval) { supplier(updaterEntity(it)) })
 
-    fun lineString(interval: Int = 20, lineSupplier: (U) -> String) =
+    fun lineString(interval: Long = 20, lineSupplier: (U) -> String) =
         line(interval, lineSupplier.map(String::toComponent))
 
     fun line(
         index: Int,
         prefix: Component, suffix: Component = Component.empty(),
-        interval: Int = 20, lineSupplier: (U) -> Component
+        interval: Long = 20, lineSupplier: (U) -> Component
     ) = line(index, LazyWrappedProtocolScoreboardLine(prefix, suffix, interval) { lineSupplier(updaterEntity(it)) })
 
     fun lineString(
         index: Int,
         prefix: String, suffix: String = "",
-        interval: Int = 20, lineSupplier: (U) -> String
+        interval: Long = 20, lineSupplier: (U) -> String
     ) = line(index, prefix.toComponent(), suffix.toComponent(), interval, lineSupplier.map(String::toComponent))
 
     fun line(
         prefix: Component, suffix: Component = Component.empty(),
-        interval: Int = 20, lineSupplier: (U) -> Component
+        interval: Long = 20, lineSupplier: (U) -> Component
     ) = line(LazyWrappedProtocolScoreboardLine(prefix, suffix, interval) { lineSupplier(updaterEntity(it)) })
 
     fun lineString(
         prefix: String, suffix: String = "",
-        interval: Int = 20, lineSupplier: (U) -> String
+        interval: Long = 20, lineSupplier: (U) -> String
     ) = line(prefix.toComponent(), suffix.toComponent(), interval, lineSupplier.map(String::toComponent))
 
     fun line(index: Int) = line(index, EmptyProtocolScoreboardLine)
@@ -88,13 +88,13 @@ class ProtocolScoreboardBuilder<U>(var updaterEntity: (Player) -> U) {
         }
     }.forEach(this::line)
 
-    fun updater(interval: Int = 20, block: ProtocolScoreboard.(Player) -> Unit) =
+    fun updater(interval: Long = 20, block: ProtocolScoreboard.(Player) -> Unit) =
         apply { updaters.add(interval to block) }
 
-    operator fun String.invoke(interval: Int = 20, block: (U) -> Any) =
+    operator fun String.invoke(interval: Long = 20, block: (U) -> Any) =
         LazyWrappedProtocolScoreboardLine(toComponent(), Component.empty(), interval) { block(updaterEntity(it)).asComponent() }
 
-    operator fun Component.invoke(interval: Int = 20, block: (U) -> Any) =
+    operator fun Component.invoke(interval: Long = 20, block: (U) -> Any) =
         LazyWrappedProtocolScoreboardLine(this, Component.empty(), interval) { block(updaterEntity(it)).asComponent() }
 
 
@@ -114,7 +114,7 @@ class ProtocolScoreboardBuilder<U>(var updaterEntity: (Player) -> U) {
     object EmptyProtocolScoreboardLine : StaticProtocolScoreboardLine(Component.empty())
 
     @KotlinOpens
-    class LazyProtocolScoreboardLine(val interval: Int, val supplier: (Player) -> Component) : ProtocolScoreboardLine {
+    class LazyProtocolScoreboardLine(val interval: Long, val supplier: (Player) -> Component) : ProtocolScoreboardLine {
 
         override fun getContent(player: Player) = supplier(player)
 
@@ -124,7 +124,7 @@ class ProtocolScoreboardBuilder<U>(var updaterEntity: (Player) -> U) {
     class LazyWrappedProtocolScoreboardLine(
         val prefix: Component,
         val suffix: Component,
-        interval: Int,
+        interval: Long,
         supplier: (Player) -> Component
     ) : LazyProtocolScoreboardLine(interval, supplier) {
 

@@ -56,18 +56,18 @@ class ProtocolDisplay(location: Location, type: EntityType) : ProtocolEntity(typ
 }
 
 inline fun <D : ProtocolDisplay> D.interpolate(
-    delay: Int, duration: Int, crossinline block: D.() -> Unit
+    delay: Long, duration: Long, crossinline block: D.() -> Unit
 ): DisplayInterpolation<D> = DisplayDelayedInterpolation(this, delay, duration) { block(this) }
     .apply(DisplayInterpolation<*>::runIfNoPreviousInterpolation)
 
 inline fun <D : ProtocolDisplay> D.interpolateCycle(
-    delay: Int, duration: Int, cycles: Int = -1,
+    delay: Long, duration: Long, cycles: Int = -1,
     crossinline block: D.() -> Unit
 ): DisplayInterpolation<D> = DisplayCycleInterpolation(this, delay, duration, cycles) { block(this) }
     .apply(DisplayInterpolation<*>::runIfNoPreviousInterpolation)
 
 inline fun <D : ProtocolDisplay> D.interpolateSwitch(
-    delay: Int, duration: Int, cycles: Int = -1,
+    delay: Long, duration: Long, cycles: Int = -1,
     crossinline block: DisplaySwitchableInterpolation.(D) -> Unit
 ): DisplayInterpolation<D> = DisplayCycleInterpolation(
     this, delay, duration, cycles,

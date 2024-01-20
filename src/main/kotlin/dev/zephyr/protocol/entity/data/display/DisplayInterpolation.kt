@@ -3,7 +3,7 @@ package dev.zephyr.protocol.entity.data.display
 import dev.zephyr.protocol.entity.modify
 import dev.zephyr.protocol.entity.world.display.ProtocolDisplay
 import dev.zephyr.task.Task
-import dev.zephyr.task.onTerminate
+import dev.zephyr.task.terminate
 import dev.zephyr.util.bukkit.afterAsync
 import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.util.collection.SwitchableList
@@ -18,7 +18,7 @@ interface DisplayInterpolation<D : ProtocolDisplay> {
 
     val entity: ProtocolDisplay
 
-    val duration: Int
+    val duration: Long
     val nextInterpolation: DisplayInterpolation<D>
     val isRunning: Boolean
 
@@ -72,7 +72,7 @@ interface DisplayInterpolation<D : ProtocolDisplay> {
 @KotlinOpens
 data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     override val entity: D,
-    val delay: Int, override val duration: Int,
+    val delay: Long, override val duration: Long,
     val action: () -> Unit
 ) : DisplayInterpolation<D> {
 
@@ -85,7 +85,7 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     protected lateinit var task: Task
 
     override val isRunning
-        get() = running && (this::task.isInitialized && task.isRunning
+        get() = running && (this::task.isInitialized && task.isCancelled
                 || this::timestamp.isInitialized && between(timestamp, now()).toMillis() / 50 <= duration)
 
     override fun after(block: D.() -> Unit) = apply { afterAction = block }
@@ -104,7 +104,7 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
         timestamp = now()
 
         entity.modify {
-            interpolationDuration = duration
+            interpolationDuration = duration.toInt()
 
             action()
         }
@@ -131,18 +131,18 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     }
 
     fun createTask() =
-        dev.zephyr.util.bukkit.after(delay) { process() } onTerminate { afterAsync(duration) { processAfterBlock() } }
+        dev.zephyr.util.bukkit.after(delay) { process() } terminate { afterAsync(duration) { processAfterBlock() } }
 
 }
 
 @KotlinOpens
 class DisplayCycleInterpolation<D : ProtocolDisplay>(
     entity: D,
-    delay: Int, duration: Int, val cycles: Int,
+    delay: Long, duration: Long, val cycles: Int,
     action: () -> Unit
 ) : DisplayDelayedInterpolation<D>(entity, delay, duration, action) {
 
-    override fun createTask() = everyAsync(delay, duration, cycles) { process() } onTerminate { processAfterBlock() }
+    override fun createTask() = everyAsync(delay, duration, cycles) { process() } terminate { processAfterBlock() }
 
 }
 

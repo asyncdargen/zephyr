@@ -10,7 +10,7 @@ import dev.zephyr.menu.setting.MenuType
 import dev.zephyr.menu.updater.MenuUpdater
 import dev.zephyr.menu.updater.update
 import dev.zephyr.util.bukkit.cancel
-import dev.zephyr.util.bukkit.forceInMainThread
+import dev.zephyr.util.bukkit.forceMainThread
 import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.kotlin.KotlinOpens
@@ -92,7 +92,7 @@ class Menu(val setting: MenuSetting) : InventoryHolder {
         cachedInventory = setting.createInventory(this)
 
         draw()
-        forceInMainThread { player.openInventory(inventory) }
+        forceMainThread { player.openInventory(inventory) }
         MenuService.add(this)
     }
 

@@ -7,6 +7,7 @@ import dev.zephyr.protocol.getChunkPointer
 import dev.zephyr.protocol.world.ChunkPointer
 import dev.zephyr.protocol.world.ChunkSection
 import dev.zephyr.protocol.world.PlayerChunks
+import dev.zephyr.util.component.toComponent
 import org.bukkit.Bukkit
 import org.bukkit.Chunk
 import org.bukkit.Location
@@ -22,7 +23,7 @@ fun Player.craft() = this as CraftPlayer
 fun Player.sendOverlay(message: String) = sendActionBar(message.toComponent())
 
 fun Player.teleportWithoutRotation(destination: Location) =
-    teleport(destination.clone().apply { direction = location.direction })
+    teleport(destination.copyDirection(location))
 
 val Player.loadedChunks
     get() = PlayerChunks[this]

@@ -5,20 +5,21 @@ interface Task {
     val id: Int
     val context: TaskContext
 
-    val delay: Int
-    val period: Int
-    var periods: Int
-    val sync: Boolean
+    val delay: Long
+    val period: Long
+    val repeats: Int
+    val executions: Int
 
-    val action: (Task) -> Unit
-    var onTerminate: (Task) -> Unit
+    var action: (Task) -> Unit
+    var terminationHandler: (Task) -> Unit
 
-    val isRunning: Boolean
+    val isSync: Boolean
+    val isCancelled: Boolean
 
-    fun terminate()
+    fun execute()
 
     fun cancel()
 
 }
 
-infix fun Task.onTerminate(block: (Task) -> Unit) = apply { onTerminate = block }
+infix fun Task.terminate(block: (Task) -> Unit) = apply { terminationHandler = block }
