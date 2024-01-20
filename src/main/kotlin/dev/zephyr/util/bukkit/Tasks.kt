@@ -1,8 +1,9 @@
 package dev.zephyr.util.bukkit
 
 import dev.zephyr.task.GlobalTaskContext
-import dev.zephyr.task.Task
 import dev.zephyr.task.MinecraftTaskProcessor
+import dev.zephyr.task.Task
+import org.bukkit.Bukkit
 
 fun after(handler: (Task) -> Unit) = GlobalTaskContext.after(handler)
 
@@ -23,5 +24,7 @@ fun everyAsync(delay: Int, period: Int, periods: Int, handler: (Task) -> Unit) =
 fun sync(task: () -> Unit) = postToMainThread(task)
 
 fun postToMainThread(task: () -> Unit) = MinecraftTaskProcessor.post(task)
+
+fun forceInMainThread(task: () -> Unit) = if (Bukkit.isPrimaryThread()) task() else postToMainThread(task)
 
 fun <T> postToMainThreadCallback(task: () -> T) = MinecraftTaskProcessor.postCallback(task)
