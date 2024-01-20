@@ -7,24 +7,11 @@ import org.bukkit.event.Event
 import org.bukkit.event.EventPriority
 
 inline fun <reified E : Event> on(
+    priority: EventPriority = EventPriority.NORMAL,
+    ignoreCancelled: Boolean = false,
+    dependEvent: Boolean = false,
     noinline handler: E.() -> Unit
-) = GlobalEventContext.on(handler)
-
-inline fun <reified E : Event> on(
-    ignoreCancelled: Boolean,
-    noinline handler: E.() -> Unit
-) = GlobalEventContext.on(ignoreCancelled, handler)
-
-inline fun <reified E : Event> on(
-    priority: EventPriority,
-    noinline handler: E.() -> Unit
-) = GlobalEventContext.on(priority, handler)
-
-inline fun <reified E : Event> on(
-    priority: EventPriority,
-    ignoreCancelled: Boolean,
-    noinline handler: E.() -> Unit
-) = GlobalEventContext.on(priority, ignoreCancelled, handler)
+) = GlobalEventContext.on(priority, ignoreCancelled, dependEvent, handler)
 
 fun <E : Event> postEvent(event: E) = event.apply(PluginManager::callEvent)
 
