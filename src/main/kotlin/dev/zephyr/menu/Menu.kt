@@ -51,10 +51,7 @@ class Menu(val setting: MenuSetting) : InventoryHolder {
         if (drawed) cachedInventory?.setItem(slot, icon.itemStack)
     }
 
-    operator fun set(x: Int, y: Int, icon: MenuIcon) {
-        icons[y * setting.columns + x] = icon
-        if (drawed) cachedInventory?.setItem(y * setting.columns + x, icon.itemStack)
-    }
+    operator fun set(x: Int, y: Int, icon: MenuIcon) = set(y * setting.columns + x, icon)
 
 
     operator fun get(slot: Int) = icons[slot]

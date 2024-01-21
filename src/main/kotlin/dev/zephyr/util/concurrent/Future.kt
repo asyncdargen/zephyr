@@ -6,7 +6,7 @@ import java.util.concurrent.Executors
 
 val Executor = Executors.newScheduledThreadPool(2)
 
-fun async(block: () -> Unit) = Executor.execute(block)
+fun <T> async(block: () -> T) = CompletableFuture.supplyAsync(block, Executor)
 
 fun <T> future(block: CompletableFuture<T>.() -> Unit) = CompletableFuture<T>().apply(block)
 

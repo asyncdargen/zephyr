@@ -2,21 +2,16 @@
 
 package dev.zephyr.util.item
 
-import com.google.common.cache.CacheBuilder
 import dev.zephyr.util.bukkit.toComponent
 import dev.zephyr.util.bukkit.toComponentList
 import dev.zephyr.util.kotlin.cast
 import dev.zephyr.util.kotlin.safeCast
 import dev.zephyr.util.kotlin.unit
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TranslatableComponent
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
-import java.util.concurrent.TimeUnit
-
-val MetaCache = CacheBuilder.newBuilder()
-    .expireAfterAccess(1, TimeUnit.MINUTES)
-    .build<Int, ItemMeta?>()
 
 inline fun item(type: Material, amount: Int = 1, block: ItemStack.() -> Unit = {}) =
     ItemStack(type, amount).apply(block)
@@ -27,39 +22,31 @@ inline fun item(item: ItemStack, block: ItemStack.() -> Unit = {}) =
 inline fun ItemStack.meta(crossinline block: ItemMeta.() -> Unit = {}) = metaAs<ItemMeta>(block)
 
 inline fun <reified T : ItemMeta> ItemStack.metaAs(crossinline block: T.() -> Unit = {}) =
-    apply { meta = metaAs<T>()?.apply(block) }
+    apply { itemMeta = metaAs<T>()?.apply(block) }
 
 inline fun <reified T : ItemMeta> ItemStack.metaAs() =
-    meta?.safeCast<T>()
+    itemMeta?.safeCast<T>()
 
-inline var ItemStack.meta: ItemMeta?
-    get() = itemMeta//MetaCache.asMap().getOrPut(referenceHash, this::getItemMeta)
-    set(value) {
-        itemMeta = value
-//        value?.let { MetaCache.put(referenceHash, it) }
-    }
+fun ItemStack.asItemComponent() = displayName().cast<TranslatableComponent>().key("disconnect.genericReason")
 
-val ItemStack.referenceHash get() = System.identityHashCode(this)
+var ItemStack.displayName: Component
+    set(value) = meta { displayName(value) }.unit()
+    get() = displayName()
 
-fun ItemStack.asComponent() = displayName().cast<TranslatableComponent>().key("disconnect.genericReason")
-
-var ItemStack.displayName: String?
+var ItemStack.displayNameString: String?
     set(value) = meta { displayName(value.toComponent()) }.unit()
-    get() = meta?.displayName
+    get() = itemMeta?.displayName
 
-var ItemStack.stringLore: List<String>
+var ItemStack.loreString: List<String>
     set(value) = lore(value.toComponentList())
     get() = lore ?: mutableListOf()
 
-fun ItemStack.lore(builder: MutableList<String>.() -> Unit) = meta { stringLore = buildList(builder) }
+fun ItemStack.lore(builder: MutableList<Component>.() -> Unit) = meta { lore(buildList(builder)) }
 
-fun ItemStack.addLore(lore: List<String>) = meta { addLore(lore) }
+fun ItemStack.addLore(lore: List<Component>) = meta { addLore(lore) }
 
-fun ItemMeta.addLore(vararg lore: String) = addLore(lore.toList())
+fun ItemMeta.addLore(vararg lore: Component) = addLore(lore.toList())
 
-fun ItemMeta.addLore(lore: List<String>) {
-    val components = lore.toComponentList()
-    lore(lore()?.apply { addAll(components) } ?: components)
-}
+fun ItemMeta.addLore(lore: List<Component>) = lore(lore()?.apply { addAll(lore) } ?: lore)
 
-fun ItemStack.addLore(vararg lore: String) = addLore(lore.toList())
+fun ItemStack.addLore(vararg lore: Component) = addLore(lore.toList())

@@ -40,3 +40,5 @@ fun openJavaModules(vararg modules: String) {
 }
 
 inline fun bitSet(block: BitSet.() -> Unit) = BitSet().apply(block)
+
+val Any.referenceHash get() = System.identityHashCode(this)

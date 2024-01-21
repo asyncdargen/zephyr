@@ -6,3 +6,4 @@ import dev.zephyr.util.kotlin.KotlinOpens
 data class StaticPageSelector<T>(override var items: List<T>) : PageSelector<T>
 
 fun <T> pageSelector(collection: List<T>) = StaticPageSelector(collection)
+fun <T> pageSelector(collection: Collection<T>) = pageSelector(collection.toList())

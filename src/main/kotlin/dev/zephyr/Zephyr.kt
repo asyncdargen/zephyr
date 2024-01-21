@@ -1,7 +1,5 @@
 package dev.zephyr
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import dev.zephyr.hook.player.PlayerHooks
 import dev.zephyr.menu.MenuService
 import dev.zephyr.protocol.entity.EntityProtocol
@@ -16,10 +14,11 @@ import org.bukkit.plugin.java.JavaPlugin
 object Zephyr : Listener {
 
     val Logger: JLogger = JLogger.getLogger("Zephyr")
-    val Gson: Gson = GsonBuilder().create()
 
     lateinit var Plugin: JavaPlugin
         private set
+
+    val DataFolder by lazy { Plugin.dataFolder.toPath() }
     val PluginNamespace by lazy { Plugin.name.lowercase() }
 
     fun initialize(

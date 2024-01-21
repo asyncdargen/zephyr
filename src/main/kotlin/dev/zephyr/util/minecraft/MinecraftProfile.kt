@@ -2,8 +2,8 @@ package dev.zephyr.util.minecraft
 
 import com.google.common.cache.CacheBuilder
 import com.google.gson.JsonObject
-import dev.zephyr.Zephyr
 import dev.zephyr.util.java.uuidFromUnsignedString
+import dev.zephyr.util.json.fromJson
 import dev.zephyr.util.kotlin.build
 import org.apache.commons.io.IOUtils.toString
 import java.net.URL
@@ -25,7 +25,7 @@ data class MinecraftProfile(val uuid: UUID, val name: String, val skin: SkinText
                         toString(
                             URL("https://sessionserver.mojang.com/session/minecraft/profile/$it?unsigned=false"),
                             Charsets.UTF_8
-                        ).run { Zephyr.Gson.fromJson(this, JsonObject::class.java) }.run {
+                        ).run { fromJson<JsonObject>(this) }.run {
                             MinecraftProfile(
                                 it, get("name").asString,
                                 get("properties").asJsonArray.get(0).asJsonObject.run {
@@ -42,7 +42,7 @@ data class MinecraftProfile(val uuid: UUID, val name: String, val skin: SkinText
                 CompletableFuture.supplyAsync {
                     runCatching {
                         toString(URL("https://api.mojang.com/users/profiles/minecraft/$it"), Charsets.UTF_8)
-                            .run { Zephyr.Gson.fromJson(this, JsonObject::class.java)["id"].asString }
+                            .run { fromJson<JsonObject>(this)["id"].asString }
                             .run { uuidFromUnsignedString(this) }
                     }.getOrNull()
                 }

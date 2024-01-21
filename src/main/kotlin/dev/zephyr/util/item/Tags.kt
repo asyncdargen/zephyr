@@ -10,7 +10,7 @@ import org.bukkit.persistence.PersistentDataType
 typealias TagType<T> = PersistentDataType<*, T>
 
 fun <T> ItemStack.tag(key: NamespacedKey, type: TagType<T>) =
-    meta?.persistentDataContainer?.get(key, type)
+    itemMeta?.persistentDataContainer?.get(key, type)
 
 fun <T> ItemStack.tag(key: String, type: TagType<T>) =
     tag(namespaceKey(key), type)
@@ -52,13 +52,13 @@ operator fun <T> ItemStack.set(key: String, value: T?) =
     tag(key, value)
 
 fun ItemStack.containsTag(key: NamespacedKey, type: TagType<*>) =
-    meta?.persistentDataContainer?.has(key, type) == true
+    itemMeta?.persistentDataContainer?.has(key, type) == true
 
 fun ItemStack.containsTag(key: String, type: TagType<*>) =
     containsTag(namespaceKey(key), type)
 
 operator fun ItemStack.contains(key: NamespacedKey) =
-    meta?.persistentDataContainer?.has(key) == true
+    itemMeta?.persistentDataContainer?.has(key) == true
 
 operator fun ItemStack.contains(key: String) =
     contains(namespaceKey(key))

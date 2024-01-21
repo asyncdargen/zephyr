@@ -18,7 +18,7 @@ class MenuPattern(var pattern: String = "", var offsetY: Int = 0, var offsetX: I
         pattern.lineSequence().forEachIndexed { row, line ->
             line.forEachIndexed { column, char ->
                 get(char)?.let {
-                    menu[row + offsetY, column + offsetX] = it.supply(PatternIndex(row, column, index++))
+                    menu[column + offsetX, row + offsetY] = it.supply(PatternIndex(row, column, index++))
                 } ?: index++
             }
         }

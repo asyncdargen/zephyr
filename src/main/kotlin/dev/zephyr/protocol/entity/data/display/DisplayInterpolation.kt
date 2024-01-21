@@ -85,7 +85,7 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     protected lateinit var task: Task
 
     override val isRunning
-        get() = running && (this::task.isInitialized && task.isCancelled
+        get() = running && (this::task.isInitialized && !task.isCancelled
                 || this::timestamp.isInitialized && between(timestamp, now()).toMillis() / 50 <= duration)
 
     override fun after(block: D.() -> Unit) = apply { afterAction = block }
@@ -93,14 +93,13 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     override fun next(block: D.() -> DisplayInterpolation<D>) = block(entity).apply(this::nextInterpolation::set)
 
     override fun run(): DisplayInterpolation<D> = apply {
-//        if (entity.isRegistered()) {
-            running = true
-            entity.interpolation = this
-            task = createTask()
-//        }
+        running = true
+        entity.interpolation = this
+        task = createTask()
     }
 
     fun process() {
+        if (cancelled) return
         timestamp = now()
 
         entity.modify {

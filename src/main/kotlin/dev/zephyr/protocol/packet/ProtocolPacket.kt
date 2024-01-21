@@ -38,7 +38,7 @@ class ProtocolPacket(type: PacketType, block: ((ProtocolPacket) -> Unit)? = null
 
     fun broadcast() = Protocol.ProtocolManager.broadcastServerPacket(this)
 
-    class ProtocolProperty<T>(
+    class  ProtocolProperty<T>(
         val writer: ProtocolPacket.(T) -> Unit
     ) : ReadWriteProperty<ProtocolPacket, T> {
 

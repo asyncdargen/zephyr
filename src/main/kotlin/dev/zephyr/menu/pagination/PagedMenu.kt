@@ -77,13 +77,13 @@ fun <T> pagedMenu(
     setting: MenuSetting,
     itemMapper: (T) -> MenuIcon = { icon(item(Material.AIR)) },
     selector: PageSelector<T> = pageSelector(emptyList()),
-    block: PagedMenu<T>.() -> Unit
+    block: PagedMenu<T>.() -> Unit ={ }
 ) = PagedMenu(setting, setting.title, itemMapper, selector).apply(block)
 
 fun <T> pagedMenu(
     title: Component,
     itemMapper: (T) -> MenuIcon = { icon(item(Material.AIR)) },
     selector: PageSelector<T> = pageSelector(emptyList()),
-    block: PagedMenu<T>.() -> Unit
+    block: PagedMenu<T>.() -> Unit = {}
 ) = pagedMenu(MenuSetting(title), itemMapper, selector, block)
 

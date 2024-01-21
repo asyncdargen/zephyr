@@ -32,8 +32,9 @@ fun String.gradient(vararg colors: org.bukkit.Color, style: String = "") =
 fun String.gradient(vararg chatColors: ChatColor, style: String = "") =
     gradient(*chatColors.map(ChatColor::getColor).toTypedArray(), style = style)
 
-fun String.colored() =
-    HexColorPattern.replace(this) { it.groupValues[1].fold("§x") { result, char -> "$result§$char" } }
+fun String.colored() = HexColorPattern.replace(replace('&', '§')) {
+    it.groupValues[1].fold("§x") { result, char -> "$result§$char" }
+}
 
 fun Int.hexColor() = hex().run { if (length == 6) this else "0".repeat(6 - length) + this }.hexColor()
 
