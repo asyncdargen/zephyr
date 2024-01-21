@@ -3,9 +3,9 @@ package dev.zephyr.util.format
 import net.md_5.bungee.api.ChatColor
 import java.awt.Color
 
-fun createGradient(startColor: Int, endColor: Int, steps: Int, skip: Int = 0): List<Int> {
-    var skip = skip
-    val steps = skip + steps
+fun createGradient(startColor: Int, endColor: Int, stepsParam: Int, skipParam: Int = 0): List<Int> {
+    var skip = skipParam
+    val steps = skip + stepsParam
 
     val startRed = (startColor shr 16) and 0xFF
     val startGreen = (startColor shr 8) and 0xFF

@@ -22,4 +22,4 @@ class LazyThreadLocal<V>(val initializer: () -> V) : ZephyrThreadLocal<V>() {
 
 fun <V> threadLocal() = ZephyrThreadLocal<V>()
 
-inline fun <V> threadLocal(noinline initializer: () -> V) = LazyThreadLocal(initializer)
+fun <V> threadLocal(initializer: () -> V) = LazyThreadLocal(initializer)

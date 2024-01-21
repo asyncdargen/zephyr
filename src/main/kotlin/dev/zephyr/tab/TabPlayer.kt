@@ -114,8 +114,8 @@ class TabPlayer(val player: Player) {
         }
     }
 
-    fun force(block: TabPlayer.() -> Unit) {
-        block()
+    fun force(block: TabPlayer.() -> Unit = {}) {
+        block(this)
         update(true)
     }
 

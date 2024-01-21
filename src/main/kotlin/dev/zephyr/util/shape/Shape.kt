@@ -54,4 +54,5 @@ interface Shape : Iterable<Location> {
 
 }
 
+@Suppress("Unchecked_Cast")
 fun <S : Shape> S.copy(world: World = this.world) = clone(world) as S

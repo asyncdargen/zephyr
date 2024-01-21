@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package dev.zephyr.hook.player
 
 import com.comphenix.protocol.wrappers.EnumWrappers.NativeGameMode

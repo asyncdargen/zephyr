@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package dev.zephyr.protocol.entity
 
 import com.comphenix.protocol.wrappers.EnumWrappers

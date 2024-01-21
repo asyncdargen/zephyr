@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package dev.zephyr.protocol.scoreboard
 
 import dev.zephyr.protocol.ProtocolObject

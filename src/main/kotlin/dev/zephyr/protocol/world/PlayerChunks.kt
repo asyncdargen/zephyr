@@ -113,9 +113,9 @@ value class ChunkSection(val data: Long) {
         val MaskXZ = 0x3FFFFF
         val MaskY = 0x3F
 
-        inline fun Int.compress(diff: Int) = (if (isPositive) 0 else 1 shl diff) + absoluteValue.toLong()
+        fun Int.compress(diff: Int) = (if (isPositive) 0 else 1 shl diff) + absoluteValue.toLong()
 
-        inline fun Long.decompress(diff: Int, mask: Int) = (toInt() and mask).run {
+        fun Long.decompress(diff: Int, mask: Int) = (toInt() and mask).run {
             (if (((this shr diff) and 0x1) == 1) -1 else 1) * (this and (mask shr 1))
         }
 

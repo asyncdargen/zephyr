@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package dev.zephyr.protocol.packet.scoreboard
 
 import com.comphenix.protocol.utility.MinecraftReflection.getMinecraftClass

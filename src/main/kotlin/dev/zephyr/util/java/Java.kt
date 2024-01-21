@@ -3,6 +3,7 @@ package dev.zephyr.util.java
 import java.lang.invoke.MethodType
 import java.util.*
 
+
 typealias JBoolean = java.lang.Boolean
 typealias JByte = java.lang.Byte
 typealias JChar = Character
