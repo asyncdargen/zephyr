@@ -16,7 +16,7 @@ object ProtocolPlayerVehicleSupport {
 
     init {
         everyAsync(10, 10) { playerVehicles.values.forEach(ProtocolVehicle::syncMounts) }
-        on<PlayerTeleportEvent>(EventPriority.LOWEST) { playerVehicles[player]?.syncMounts() }
+        on<PlayerTeleportEvent>(EventPriority.LOWEST) { playerVehicles[player]?.syncMounts()  }
         on<PlayerQuitEvent>(EventPriority.LOWEST) { playerVehicles.remove(player)?.clear() }
     }
 

@@ -405,7 +405,7 @@ class ProtocolEntity(
 
     fun refreshViewers() {
         viewers
-            .filterNot { hasAccess(it) || it !in chunkPointer.loadedByPlayers }
+            .filterNot { hasAccess(it) && it in chunkPointer.loadedByPlayers }
             .ifNotEmpty(this::destroy)
 
         spawnLocal()

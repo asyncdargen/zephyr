@@ -39,7 +39,7 @@ compileKotlin.kotlinOptions {
             '-Xno-call-assertions',
             '-Xbackend-threads=0',
             '-Xassertions=always-disable',
-            '-Xuse-fast-jar-file-system',
+//            '-Xuse-fast-jar-file-system',
             '-Xsam-conversions=indy'
     ]
 }
