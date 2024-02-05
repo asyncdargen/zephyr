@@ -123,10 +123,6 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     override fun cancel() {
         cancelled = true
         task.cancel()
-        entity.modify {
-            interpolationDelay = 0
-            interpolationDuration = 0
-        }
     }
 
     fun createTask() =

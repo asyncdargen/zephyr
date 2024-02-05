@@ -6,7 +6,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 val DelayMap = WeakHashMap<String, Long>()
 
-fun getDelay(id: String) = DelayMap[id]?.let { it - System.currentTimeMillis() } ?: 0
+fun getDelay(id: String) = DelayMap[id.lowercase()]?.let { it - System.currentTimeMillis() } ?: 0
 
 fun setDelay(id: String, duration: Duration) {
     DelayMap[id.lowercase()] = currentMillis + duration.inWholeMilliseconds

@@ -7,10 +7,11 @@ import dev.zephyr.task.GlobalTaskContext
 import dev.zephyr.util.bukkit.players
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.kotlin.KotlinOpens
+import dev.zephyr.util.kotlin.cast
 import org.bukkit.entity.Player
 
 @KotlinOpens
-abstract class ProtocolObject  {
+abstract class ProtocolObject {
 
     final var hasTaskContext: Boolean = false
         private set
@@ -19,6 +20,9 @@ abstract class ProtocolObject  {
 
     val eventContext by lazy { hasEventContext = true; GlobalEventContext.fork(false).apply(this::filterEvents) }
     val taskContext by lazy { hasTaskContext = true; GlobalTaskContext.fork(false) }
+
+    var spawnHandler: ProtocolObject.(Player) -> Unit = { }
+    var destroyHandler: ProtocolObject.(Player) -> Unit = { }
 
     val viewers: MutableCollection<Player> = concurrentSetOf()
 
@@ -37,6 +41,7 @@ abstract class ProtocolObject  {
         viewers.addAll(players)
 
         sendSpawnPackets(players)
+        players.forEach { spawnHandler(it) }
     }
 
     fun spawn(vararg players: Player) = spawn(players.toList())
@@ -53,6 +58,8 @@ abstract class ProtocolObject  {
         if (players.isEmpty()) {
             return
         }
+
+        players.forEach { destroyHandler(it) }
 
         sendDestroyPackets(players)
 
@@ -90,3 +97,7 @@ abstract class ProtocolObject  {
     }
 
 }
+
+infix fun <O : ProtocolObject> O.spawn(handler: O.(Player) -> Unit) = apply { spawnHandler = handler.cast() }
+
+infix fun <O : ProtocolObject> O.destroy(handler: O.(Player) -> Unit) = apply { destroyHandler = handler.cast() }

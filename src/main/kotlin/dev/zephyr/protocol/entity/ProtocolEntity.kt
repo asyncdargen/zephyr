@@ -37,6 +37,7 @@ import dev.zephyr.util.kotlin.observable
 import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
 import org.bukkit.Location
+import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.potion.PotionEffectType
@@ -445,3 +446,11 @@ inline fun <E : ProtocolEntity> E.modifySpecial(vararg players: Player, crossinl
 
 inline fun <E : ProtocolEntity> E.modifyEachViewer(crossinline block: E.(viewer: Player) -> Unit) =
     viewers.forEach { modifySpecial(it) { block(it) } }
+
+fun ProtocolEntity.pickUp(entityId: Int, amount: Int = 1) = PacketPickUpEntity().also {
+    it.entityId = this@pickUp.entityId
+    it.collectorEntityId = entityId
+    it.amount = amount
+}.send(viewers)
+
+fun ProtocolEntity.pickUp(entity: Entity, amount: Int = 1) = pickUp(entity.entityId)

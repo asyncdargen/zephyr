@@ -29,6 +29,10 @@ inline fun <reified T : ItemMeta> ItemStack.metaAs() =
 
 fun ItemStack.asItemComponent() = displayName().cast<TranslatableComponent>().key("disconnect.genericReason")
 
+var ItemStack.customModel: Int?
+    set(value) = meta { setCustomModelData(value) }.unit()
+    get() = itemMeta.customModelData
+
 var ItemStack.displayName: Component
     set(value) = meta { displayName(value) }.unit()
     get() = displayName()
