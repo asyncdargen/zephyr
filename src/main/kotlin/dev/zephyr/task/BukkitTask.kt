@@ -25,7 +25,10 @@ class BukkitTask(
 ) : Task {
 
     private val handle = when {
+        isSync && repeats == 1-> getScheduler().runTaskLater(Plugin, this::execute, delay)
         isSync -> getScheduler().runTaskTimer(Plugin, this::execute, delay, period)
+
+        repeats == 1 -> getScheduler().runTaskLaterAsynchronously(Plugin, this::execute, delay)
         else -> getScheduler().runTaskTimerAsynchronously(Plugin, this::execute, delay, period)
     }
 
@@ -45,7 +48,7 @@ class BukkitTask(
     }
 
     override fun cancel() {
-        if (!isCancelled) {
+        if (repeats != 1 && !isCancelled) {
             handle.cancel()
         }
 
