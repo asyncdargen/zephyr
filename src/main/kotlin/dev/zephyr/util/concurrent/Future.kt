@@ -4,7 +4,7 @@ import dev.zephyr.util.bukkit.forceMainThread
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
-val Executor = Executors.newScheduledThreadPool(2)
+var Executor = Executors.newScheduledThreadPool(2)
 
 fun <T> async(block: () -> T) = CompletableFuture.supplyAsync(block, Executor)
 

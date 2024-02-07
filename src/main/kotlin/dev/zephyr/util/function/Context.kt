@@ -1,15 +1,14 @@
 package dev.zephyr.util.function
 
-interface Context<T : Context<T>> {
+interface Context {
 
     fun close()
 
 }
 
-interface ForkingContext<T : ForkingContext<T>> : Context<T> {
+interface ForkingContext<T : ForkingContext<T>> : Context {
 
     val forks: MutableSet<T>
-
 
     fun fork(follow: Boolean = true): T
 

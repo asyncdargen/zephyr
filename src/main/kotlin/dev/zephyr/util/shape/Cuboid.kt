@@ -43,9 +43,9 @@ class Cuboid protected constructor(override val world: World, val minPoint: Vect
         )
     val minLocation get() = minPoint.toLocation(world)
     val maxLocation get() = maxPoint.toLocation(world)
-    val widthX get() = maxPoint.blockX - minPoint.blockX + 1
-    val height get() = maxPoint.blockY - minPoint.blockY + 1
-    val widthZ get() = maxPoint.blockZ - minPoint.blockZ + 1
+    val widthX get() = maxPoint.blockX - minPoint.blockX
+    val height get() = maxPoint.blockY - minPoint.blockY
+    val widthZ get() = maxPoint.blockZ - minPoint.blockZ
     val size get() = Vector(widthX, height, widthZ)
 
     override val chunks: Sequence<Chunk>
@@ -62,9 +62,9 @@ class Cuboid protected constructor(override val world: World, val minPoint: Vect
 
     override fun contains(world: World, x: Double, y: Double, z: Double) =
         this.world === world
-                && x.isBetween(minPoint.x, maxPoint.x)
-                && y.isBetween(minPoint.y, maxPoint.y)
-                && z.isBetween(minPoint.z, maxPoint.z)
+                && x.isBetween(minPoint.x, maxPoint.blockX + .999)
+                && y.isBetween(minPoint.y, maxPoint.blockY + .999)
+                && z.isBetween(minPoint.z, maxPoint.blockZ + .999)
 
     override fun contains(world: World, point: Vector) =
         contains(world, point.x, point.y, point.z)

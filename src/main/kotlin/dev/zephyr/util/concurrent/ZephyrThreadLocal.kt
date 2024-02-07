@@ -8,7 +8,7 @@ class ZephyrThreadLocal<V> : FastThreadLocal<V>() {
 
     fun contains() = ifExists != null
 
-    fun getOrNull() = if (contains()) get() else null
+    fun getOrNull(): V? = ifExists
 
 }
 
@@ -16,7 +16,6 @@ class ZephyrThreadLocal<V> : FastThreadLocal<V>() {
 class LazyThreadLocal<V>(val initializer: () -> V) : ZephyrThreadLocal<V>() {
 
     override fun initialValue() = initializer()
-
 
 }
 
