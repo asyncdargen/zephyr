@@ -130,7 +130,7 @@ class Cuboid protected constructor(override val world: World, val minPoint: Vect
             }
         }
 
-        override fun hasNext() = position.x < widthX && position.y < height && position.z < widthZ
+        override fun hasNext() = position.x <= widthX && position.y <= height && position.z <= widthZ
 
         override fun next() = world.at(minPoint.x + position.x, minPoint.y + position.y, minPoint.z + position.z)
             .apply { step() }
