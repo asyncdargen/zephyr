@@ -5,7 +5,6 @@ import dev.zephyr.protocol.world.ChunkPointer
 import dev.zephyr.util.bukkit.at
 import dev.zephyr.util.bukkit.diff
 import dev.zephyr.util.kotlin.KotlinOpens
-import dev.zephyr.util.numbers.isBetween
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.World
@@ -43,10 +42,15 @@ class Cuboid protected constructor(override val world: World, val minPoint: Vect
         )
     val minLocation get() = minPoint.toLocation(world)
     val maxLocation get() = maxPoint.toLocation(world)
-    val widthX get() = maxPoint.blockX - minPoint.blockX
-    val height get() = maxPoint.blockY - minPoint.blockY
-    val widthZ get() = maxPoint.blockZ - minPoint.blockZ
+
+    val widthX get() = maxPoint.blockX - minPoint.blockX + 1
+    val height get() = maxPoint.blockY - minPoint.blockY + 1
+    val widthZ get() = maxPoint.blockZ - minPoint.blockZ + 1
     val size get() = Vector(widthX, height, widthZ)
+
+    val rangeX = minPoint.x..<(maxPoint.blockX + 1.0)
+    val rangeY = minPoint.y..<(maxPoint.blockY + 1.0)
+    val rangeZ = minPoint.z..<(maxPoint.blockZ + 1.0)
 
     override val chunks: Sequence<Chunk>
         get() = blocks.map(Block::getChunk).distinct()
@@ -61,10 +65,7 @@ class Cuboid protected constructor(override val world: World, val minPoint: Vect
         get() = blocks.groupBy(Block::getChunk)
 
     override fun contains(world: World, x: Double, y: Double, z: Double) =
-        this.world === world
-                && x.isBetween(minPoint.x, maxPoint.blockX + .999)
-                && y.isBetween(minPoint.y, maxPoint.blockY + .999)
-                && z.isBetween(minPoint.z, maxPoint.blockZ + .999)
+        this.world === world && x in rangeX && y in rangeY && z in rangeZ
 
     override fun contains(world: World, point: Vector) =
         contains(world, point.x, point.y, point.z)
@@ -130,7 +131,7 @@ class Cuboid protected constructor(override val world: World, val minPoint: Vect
             }
         }
 
-        override fun hasNext() = position.x <= widthX && position.y <= height && position.z <= widthZ
+        override fun hasNext() = position.x < widthX && position.y < height && position.z < widthZ
 
         override fun next() = world.at(minPoint.x + position.x, minPoint.y + position.y, minPoint.z + position.z)
             .apply { step() }
