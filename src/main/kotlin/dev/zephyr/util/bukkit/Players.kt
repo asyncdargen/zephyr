@@ -16,7 +16,7 @@ import org.bukkit.block.Block
 import org.bukkit.craftbukkit.v1_19_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
 
-fun Player.isTracked(player: Player) = player in trackedPlayers
+fun Player.isTracked(player: Player) = player === this || player in trackedPlayers
 
 fun players() = Bukkit.getOnlinePlayers()
 

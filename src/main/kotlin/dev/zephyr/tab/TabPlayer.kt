@@ -189,7 +189,8 @@ class TabPlayer(val player: Player) {
                 isShadowed = true
                 text = it.name.toComponent()
                 translation = Vector3f(0f, .6f, 0f)
-                billboard = DisplayBillBoard.VERTICAL
+                billboard = DisplayBillBoard.CENTER
+                scale = Vector3f(2f)
                 removeBackground()
                 removeShadow()
             }
