@@ -90,6 +90,7 @@ class TabPlayer(val player: Player) {
                         && (player.gameMode == GameMode.SPECTATOR && player.gameMode == it.gameMode || player.gameMode != GameMode.SPECTATOR)
             }
             register()
+            container.resneakTag()
             player.mount(this)
         }
 
@@ -190,7 +191,7 @@ class TabPlayer(val player: Player) {
                 text = it.name.toComponent()
                 translation = Vector3f(0f, .6f, 0f)
                 billboard = DisplayBillBoard.VERTICAL
-                scale = Vector3f(4f)
+                scale = Vector3f(.2f)
                 removeBackground()
                 removeShadow()
             }
