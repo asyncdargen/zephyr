@@ -20,6 +20,7 @@ import dev.zephyr.tab.TabPlayer.Properties.tagFactory
 import dev.zephyr.tab.TabPlayer.Properties.tagSelfAccess
 import dev.zephyr.tab.TabPlayer.Properties.teamFactory
 import dev.zephyr.util.bukkit.clearAngles
+import dev.zephyr.util.bukkit.isTracked
 import dev.zephyr.util.component.components
 import dev.zephyr.util.component.literal
 import dev.zephyr.util.component.toComponent
@@ -84,7 +85,8 @@ class TabPlayer(val player: Player) {
     fun update(force: Boolean = false) {
         if (!container.tag.isRegistered()) with(container.tag) {
             access {
-                (tagSelfAccess || player !== it) && tagAccessor(player, it) && it.canSee(player) && !player.isDead
+                (tagSelfAccess || player !== it) && it.isTracked(player)
+                        && tagAccessor(player, it) && it.canSee(player) && !player.isDead
                         && (player.gameMode == GameMode.SPECTATOR && player.gameMode == it.gameMode || player.gameMode != GameMode.SPECTATOR)
             }
             register()
