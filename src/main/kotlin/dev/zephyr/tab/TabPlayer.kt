@@ -42,7 +42,7 @@ class TabPlayer(val player: Player) {
 
     var order by observable(0, true) { _, _ -> dirtyTeam = true }
 
-    var displayName by observable<Component>(player.name.toComponent(), true) { _, _ -> dirtyName = true }
+    var tabName by observable<Component>(player.name.toComponent(), true) { _, _ -> dirtyName = true }
     var header by observable<Component>(Component.empty(), true) { _, _ -> dirtyHeaderFooter = true }
     var footer by observable<Component>(Component.empty(), true) { _, _ -> dirtyHeaderFooter = true }
     var tagName: Component
@@ -53,10 +53,10 @@ class TabPlayer(val player: Player) {
             }
         }
 
-    var displayNameString: String
-        get() = displayName.literal()
+    var tabNameString: String
+        get() = tabName.literal()
         set(value) {
-            displayName = value.toComponent()
+            tabName = value.toComponent()
         }
     var headerString: String
         get() = header.literal()
@@ -90,8 +90,8 @@ class TabPlayer(val player: Player) {
                         && (player.gameMode == GameMode.SPECTATOR && player.gameMode == it.gameMode || player.gameMode != GameMode.SPECTATOR)
             }
             register()
-            container.resneakTag()
             player.mount(this)
+            container.resneakTag()
         }
 
         if (dirtyHeaderFooter) PacketPlayerHeaderFooter().also {
@@ -162,7 +162,7 @@ class TabPlayer(val player: Player) {
         fun getOrCreateProfile() = profile ?: PlayerInfoData(
             WrappedGameProfile.fromPlayer(player), player.ping,
             EnumWrappers.NativeGameMode.fromBukkit(player.gameMode),
-            displayName.wrap()
+            tabName.wrap()
         )
 
         fun removeProfile() {
@@ -191,7 +191,7 @@ class TabPlayer(val player: Player) {
                 text = it.name.toComponent()
                 translation = Vector3f(0f, .6f, 0f)
                 billboard = DisplayBillBoard.VERTICAL
-                scale = Vector3f(.2f)
+                scale = Vector3f(1f)
                 removeBackground()
                 removeShadow()
             }
