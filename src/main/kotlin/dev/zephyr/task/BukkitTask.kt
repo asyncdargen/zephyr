@@ -1,6 +1,7 @@
 package dev.zephyr.task
 
 import dev.zephyr.Zephyr.Plugin
+import dev.zephyr.util.bukkit.forceMainThread
 import dev.zephyr.util.concurrent.threadLocal
 import dev.zephyr.util.java.catch
 import dev.zephyr.util.kotlin.KotlinOpens
@@ -25,7 +26,7 @@ class BukkitTask(
 ) : Task {
 
     private val handle = when {
-        isSync && repeats == 1-> getScheduler().runTaskLater(Plugin, this::execute, delay)
+        isSync && repeats == 1 -> getScheduler().runTaskLater(Plugin, this::execute, delay)
         isSync -> getScheduler().runTaskTimer(Plugin, this::execute, delay, period)
 
         repeats == 1 -> getScheduler().runTaskLaterAsynchronously(Plugin, this::execute, delay)
@@ -48,7 +49,7 @@ class BukkitTask(
     }
 
     override fun cancel() {
-        if (repeats != 1 && !isCancelled) {
+        if (/*repeats != 1 && */!isCancelled) { // useless check comment
             handle.cancel()
         }
 

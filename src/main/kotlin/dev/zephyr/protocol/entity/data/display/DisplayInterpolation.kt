@@ -4,13 +4,9 @@ import dev.zephyr.protocol.entity.modify
 import dev.zephyr.protocol.entity.world.display.ProtocolDisplay
 import dev.zephyr.task.Task
 import dev.zephyr.task.terminate
-import dev.zephyr.util.bukkit.afterAsync
 import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.util.collection.SwitchableList
 import dev.zephyr.util.kotlin.KotlinOpens
-import java.time.Duration.between
-import java.time.Instant
-import java.time.Instant.now
 import kotlin.reflect.KMutableProperty0
 
 
@@ -22,7 +18,7 @@ interface DisplayInterpolation<D : ProtocolDisplay> {
     val nextInterpolation: DisplayInterpolation<D>
     val isRunning: Boolean
 
-    fun runIfNoPreviousInterpolation(): DisplayInterpolation<D> = apply {
+    fun runIfNoPrevious(): DisplayInterpolation<D> = apply {
         if (!entity.interpolation.isRunning) {
             run()
         }
@@ -48,9 +44,7 @@ interface DisplayInterpolation<D : ProtocolDisplay> {
         override val isRunning
             get() = false
 
-        override fun cancel() {
-
-        }
+        override fun cancel() {}
 
         override fun run(): DisplayInterpolation<ProtocolDisplay> {
             throw UnsupportedOperationException()
@@ -64,11 +58,10 @@ interface DisplayInterpolation<D : ProtocolDisplay> {
             throw UnsupportedOperationException()
         }
 
-
     }
 
 }
-
+//Removed code that only made it worse
 @KotlinOpens
 data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     override val entity: D,
@@ -78,56 +71,47 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
 
     protected lateinit var afterAction: D.() -> Unit
     override lateinit var nextInterpolation: DisplayInterpolation<D>
-    protected lateinit var timestamp: Instant
 
-    protected var running = false
     protected var cancelled = false
     protected lateinit var task: Task
 
-    override val isRunning
-        get() = running && (this::task.isInitialized && !task.isCancelled
-                || this::timestamp.isInitialized && between(timestamp, now()).toMillis() / 50 <= duration)
+    override val isRunning get() = this::task.isInitialized && !task.isCancelled
 
     override fun after(block: D.() -> Unit) = apply { afterAction = block }
 
     override fun next(block: D.() -> DisplayInterpolation<D>) = block(entity).apply(this::nextInterpolation::set)
 
     override fun run(): DisplayInterpolation<D> = apply {
-        running = true
         entity.interpolation = this
         task = createTask()
     }
 
     fun process() {
         if (cancelled) return
-        timestamp = now()
-
         entity.modify {
             interpolationDuration = duration.toInt()
-
             action()
         }
     }
 
     protected fun processAfterBlock() {
-        if (!cancelled) {
-            if (this@DisplayDelayedInterpolation::afterAction.isInitialized) {
-                afterAction(entity)
-            }
-            if (this::nextInterpolation.isInitialized) {
-                nextInterpolation.run()
-            }
-        }
+        if (cancelled) return
+
+        if (this::afterAction.isInitialized) afterAction(entity)
+
+        if (this::nextInterpolation.isInitialized) nextInterpolation.run()
     }
 
     override fun cancel() {
         cancelled = true
-        task.cancel()
+        if (this::task.isInitialized) task.cancel()
+        entity.modify {
+            interpolationDelay = -1
+            interpolationDuration = 0
+        }
     }
 
-    fun createTask() =
-        dev.zephyr.util.bukkit.after(delay) { process() } terminate { afterAsync(duration) { processAfterBlock() } }
-
+    fun createTask() = dev.zephyr.util.bukkit.after(delay) { process() } terminate { dev.zephyr.util.bukkit.after(duration) { processAfterBlock() } }
 }
 
 @KotlinOpens

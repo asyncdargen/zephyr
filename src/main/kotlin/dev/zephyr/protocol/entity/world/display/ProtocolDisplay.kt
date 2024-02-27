@@ -58,13 +58,13 @@ class ProtocolDisplay(location: Location, type: EntityType) : ProtocolEntity(typ
 inline fun <D : ProtocolDisplay> D.interpolate(
     delay: Long, duration: Long, crossinline block: D.() -> Unit
 ): DisplayInterpolation<D> = DisplayDelayedInterpolation(this, delay, duration) { block(this) }
-    .apply(DisplayInterpolation<*>::runIfNoPreviousInterpolation)
+    .apply(DisplayInterpolation<*>::runIfNoPrevious)
 
 inline fun <D : ProtocolDisplay> D.interpolateCycle(
     delay: Long, duration: Long, cycles: Int = -1,
     crossinline block: D.() -> Unit
 ): DisplayInterpolation<D> = DisplayCycleInterpolation(this, delay, duration, cycles) { block(this) }
-    .apply(DisplayInterpolation<*>::runIfNoPreviousInterpolation)
+    .apply(DisplayInterpolation<*>::runIfNoPrevious)
 
 inline fun <D : ProtocolDisplay> D.interpolateSwitch(
     delay: Long, duration: Long, cycles: Int = -1,
@@ -72,7 +72,7 @@ inline fun <D : ProtocolDisplay> D.interpolateSwitch(
 ): DisplayInterpolation<D> = DisplayCycleInterpolation(
     this, delay, duration, cycles,
     DisplaySwitchableInterpolation().also { block(it, this) }
-).apply(DisplayInterpolation<*>::runIfNoPreviousInterpolation)
+).apply(DisplayInterpolation<*>::runIfNoPrevious)
 
 
 fun <D : ProtocolDisplay> D.removeShadow() = apply {
