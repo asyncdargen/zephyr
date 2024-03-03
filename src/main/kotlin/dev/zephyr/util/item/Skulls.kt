@@ -62,7 +62,7 @@ var ItemStack.skullGameProfile
 var ItemStack.skullTexture
     set(value) {
         skullGameProfile = GameProfile(UUID.randomUUID(), "dargen").apply {
-            properties.put("textures", Property("textures", value?.value, value?.signature))
+            properties.put("textures", Property("textures", value?.value ?: "", value?.signature ?: ""))
         }
     }
     get() = skullGameProfile?.properties?.get("textures")?.firstOrNull()?.let { SkinTexture(it.value, it.signature) }
