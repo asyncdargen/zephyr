@@ -38,10 +38,12 @@ object EntityProtocol {
             PlayerFakeEntityInteractEvent(player, action, entityId, entity).callEvent()
 
             entity ?: return@onReceive
-            if (!entity.isSpawned(player)) {
-                Zephyr.Logger.warning("Player ${player.name} clicked to protocol entity $entityId not spawned from him!")
-            } else checkOrSetDelay("${entityId}_${player.name}_click", 20) {
-                entity.clickHandler(entity, player, action)
+            checkOrSetDelay("${entityId}_${player.name}_click", 20) {
+                if (!entity.isSpawned(player)) {
+                    Zephyr.Logger.warning("Player ${player.name} clicked to protocol entity $entityId not spawned for him!")
+                } else {
+                    entity.clickHandler(entity, player, action)
+                }
             }
         }
         on<PlayerChunkUnloadEvent> {
