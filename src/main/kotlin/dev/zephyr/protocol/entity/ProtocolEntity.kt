@@ -113,12 +113,6 @@ class ProtocolEntity(
     val chunk get() = location.chunk
     val world get() = location.world
 
-    init {
-        if (EntityProtocol.AutoRegister) {
-            register()
-        }
-    }
-
     override fun spawn(players: Collection<Player>) {
         super.spawn(players)
         team.spawn(players)

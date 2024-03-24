@@ -61,6 +61,7 @@ interface DisplayInterpolation<D : ProtocolDisplay> {
     }
 
 }
+
 //Removed code that only made it worse
 @KotlinOpens
 data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
@@ -111,7 +112,8 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
         }
     }
 
-    fun createTask() = dev.zephyr.util.bukkit.after(delay) { process() } terminate { dev.zephyr.util.bukkit.after(duration) { processAfterBlock() } }
+    fun createTask() =
+        dev.zephyr.util.bukkit.after(delay) { process() } terminate { dev.zephyr.util.bukkit.after(duration) { processAfterBlock() } }
 }
 
 @KotlinOpens

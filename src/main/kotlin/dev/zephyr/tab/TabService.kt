@@ -1,6 +1,6 @@
 package dev.zephyr.tab
 
-import com.comphenix.protocol.wrappers.EnumWrappers
+import com.comphenix.protocol.wrappers.EnumWrappers.PlayerInfoAction
 import dev.zephyr.protocol.packet.player.PacketPlayerInfoUpdate
 import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.util.bukkit.on
@@ -19,15 +19,15 @@ object TabService {
 
     var setupBlock: TabPlayer.() -> Unit = {}
 
-    val queueLock: Lock = ReentrantLock()
-    val queued = concurrentSetOf<Player>()
+    private val QueueLock: Lock = ReentrantLock()
+    private val queued = concurrentSetOf<Player>()
 
     val players = concurrentHashMapOf<Player, TabPlayer>()
 
     fun setup(block: TabPlayer.() -> Unit = setupBlock) {
         setupBlock = block
 
-        on<PlayerJoinEvent> { queueLock.use { queued.add(player) } }
+        on<PlayerJoinEvent> { QueueLock.use { queued.add(player) } }
         on<PlayerQuitEvent> { players.remove(player)?.remove() }
 
         on<PlayerToggleSneakEvent> { getSafe(player)?.container?.resneakTag(isSneaking) }
@@ -35,7 +35,7 @@ object TabService {
         everyAsync(1, 1) {
             var queued: Collection<TabPlayer> = emptyList()
             var queuedPlayers: Collection<Player> = emptyList()
-            queueLock.use {
+            QueueLock.use {
                 queuedPlayers = this.queued.filter(Player::isOnline)
                 queued = queuedPlayers.map(::TabPlayer).onEach { it.setupBlock(); players[it.player] = it }
                 this.queued.clear()
@@ -58,6 +58,6 @@ object TabService {
         players.values.filter { force || it.dirtyName }
             .map { it.dirtyName = false; it.container.getOrCreateProfile() }
             .takeIfNotEmpty()
-            ?.let { PacketPlayerInfoUpdate.many(it, EnumWrappers.PlayerInfoAction.UPDATE_DISPLAY_NAME) }
+            ?.let { PacketPlayerInfoUpdate.many(it, PlayerInfoAction.UPDATE_DISPLAY_NAME) }
 
 }

@@ -26,11 +26,27 @@ inline fun <reified T : Any> GsonBuilder.serializer(
     noinline serializer: (any: T, ctx: JsonSerializationContext) -> JsonElement
 ) = registerTypeAdapter(type, DelegateJsonSerializer(serializer))
 
+inline fun <reified T : Any> GsonBuilder.deserializerHierarchy(
+    type: Class<T> = T::class.java,
+    noinline deserializer: (element: JsonElement, ctx: JsonDeserializationContext) -> T
+) = registerTypeHierarchyAdapter(type, DelegateJsonDeserializer(deserializer))
+
+inline fun <reified T : Any> GsonBuilder.serializerHierarchy(
+    type: Class<T> = T::class.java,
+    noinline serializer: (any: T, ctx: JsonSerializationContext) -> JsonElement
+) = registerTypeHierarchyAdapter(type, DelegateJsonSerializer(serializer))
+
 inline fun <reified T : Any> GsonBuilder.adapter(
     noinline serializer: (obj: T, ctx: JsonSerializationContext) -> JsonElement,
     noinline deserializer: (element: JsonElement, ctx: JsonDeserializationContext) -> T,
     type: Type = type<T>()
 ) = deserializer(type, deserializer).serializer(type, serializer)
+
+inline fun <reified T : Any> GsonBuilder.adapterHierarchy(
+    noinline serializer: (obj: T, ctx: JsonSerializationContext) -> JsonElement,
+    noinline deserializer: (element: JsonElement, ctx: JsonDeserializationContext) -> T,
+    type: Class<T> = T::class.java,
+) = deserializerHierarchy(type, deserializer).serializerHierarchy(type, serializer)
 
 inline fun <reified T : Any> type() = object : TypeToken<T>() {}.type
 

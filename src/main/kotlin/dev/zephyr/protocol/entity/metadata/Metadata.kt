@@ -110,12 +110,16 @@ class ObservableMetadata(val observer: (Metadata) -> Unit) : Metadata() {
 
         val throwable = runCatching(block).exceptionOrNull()
 
-        if (new && context.batch) {
+        if (new) {
             contexts.remove()
-            context.items.let(itemsMap::putAll)
 
-            if (observable)
-                observer(this)
+            if (context.batch) {
+                context.items.let(itemsMap::putAll)
+
+                if (observable) {
+                    observer(this)
+                }
+            }
 
             throwable.throwIfNonNull()
         }
