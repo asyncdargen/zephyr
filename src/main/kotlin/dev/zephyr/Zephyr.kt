@@ -16,7 +16,6 @@ object Zephyr : Listener {
     val Logger: JLogger = JLogger.getLogger("Zephyr")
 
     lateinit var Plugin: JavaPlugin
-        private set
 
     val DataFolder by lazy { Plugin.dataFolder.toPath() }
     val PluginNamespace by lazy { Plugin.name.lowercase() }

@@ -13,4 +13,4 @@ fun <N> N.isBetween(min: N, max: N) where N : Number, N : Comparable<N> = this >
 
 fun square(value: Double) = value * value
 
-val Int.length get() = floor(log10(12345.0) + 1).toInt()
+val Int.length get() = floor(log10(toDouble()) + 1).toInt()
