@@ -1,7 +1,7 @@
 package dev.zephyr.util.shape
 
-import dev.zephyr.protocol.getChunkSectionPointer
-import dev.zephyr.protocol.world.ChunkPointer
+import dev.zephyr.protocol.world.ChunkPosition
+import dev.zephyr.protocol.world.chunkSectionPosition
 import dev.zephyr.util.bukkit.at
 import dev.zephyr.util.bukkit.diff
 import dev.zephyr.util.kotlin.KotlinOpens
@@ -59,8 +59,8 @@ class Cuboid protected constructor(override val world: World, val minPoint: Vect
     override val entities: Sequence<Entity>
         get() = chunks.map(Chunk::getEntities).map(Array<Entity>::toList).flatten()
 
-    override val chunksPositionsBlocks: Map<ChunkPointer, List<Block>>
-        get() = blocks.groupBy(Block::getChunkSectionPointer)
+    override val chunksPositionsBlocks: Map<ChunkPosition, List<Block>>
+        get() = blocks.groupBy(Block::chunkSectionPosition)
     override val chunksBlocks: Map<Chunk, List<Block>>
         get() = blocks.groupBy(Block::getChunk)
 

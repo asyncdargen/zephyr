@@ -1,6 +1,6 @@
 package dev.zephyr.util.shape
 
-import dev.zephyr.protocol.world.ChunkPointer
+import dev.zephyr.protocol.world.ChunkPosition
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.World
@@ -15,7 +15,7 @@ interface Shape : Iterable<Location> {
     val blocks: Sequence<Block>
     val entities: Sequence<Entity>
 
-    val chunksPositionsBlocks: Map<ChunkPointer, List<Block>>
+    val chunksPositionsBlocks: Map<ChunkPosition, List<Block>>
     val chunksBlocks: Map<Chunk, List<Block>>
 
     fun contains(world: World, x: Double, y: Double, z: Double): Boolean

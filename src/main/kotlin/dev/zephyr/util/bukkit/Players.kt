@@ -1,12 +1,7 @@
 package dev.zephyr.util.bukkit
 
 import com.comphenix.protocol.wrappers.BlockPosition
-import dev.zephyr.protocol.asChunkPointer
-import dev.zephyr.protocol.chunkPointer
-import dev.zephyr.protocol.getChunkPointer
-import dev.zephyr.protocol.world.ChunkPointer
-import dev.zephyr.protocol.world.ChunkSection
-import dev.zephyr.protocol.world.PlayerChunks
+import dev.zephyr.protocol.world.*
 import dev.zephyr.util.component.toComponent
 import org.bukkit.Bukkit
 import org.bukkit.Chunk
@@ -20,6 +15,8 @@ fun Player.isTracked(player: Player) = player === this || player in trackedPlaye
 
 fun players() = Bukkit.getOnlinePlayers()
 
+fun player(name: String) = Bukkit.getPlayer(name)
+
 fun Player.craft() = this as CraftPlayer
 
 fun Player.sendOverlay(message: String) = sendActionBar(message.toComponent())
@@ -30,30 +27,30 @@ fun Player.teleportWithoutRotation(destination: Location) =
 val Player.loadedChunks
     get() = PlayerChunks[this]
 
-fun Player.isChunkLoaded(pointer: ChunkPointer) = pointer.full() in loadedChunks
+fun Player.isChunkLoaded(pointer: ChunkPosition) = isChunkLoaded(pointer.world, pointer.position)
 
-fun Player.isChunkLoaded(section: ChunkSection) = isChunkLoaded(section.pointer(world))
+fun Player.isChunkLoaded(world: World, section: Position) = this.world === world && (if (section.y == 0) section else section.clone(y = 0)) in loadedChunks
 
-fun Player.isChunkLoaded(chunk: Chunk) = isChunkLoaded(chunk.asChunkPointer())
+fun Player.isChunkLoaded(chunk: Chunk) = isChunkLoaded(chunk.chunkPosition)
 
-fun Player.isChunkLoaded(chunkLocation: Location) = isChunkLoaded(chunkLocation.asChunkPointer())
+fun Player.isChunkLoaded(location: Location) = isChunkLoaded(world, location.chunkToPosition)
 
 fun Player.isChunkLoaded(block: Block) = isChunkLoaded(block.location)
 
 fun Player.isChunkLoaded(world: World = this.world, chunkX: Int, chunkZ: Int) =
-    isChunkLoaded(world.chunkPointer(chunkX, chunkZ))
+    isChunkLoaded(world.chunkPosition(chunkX, chunkZ))
 
 fun Player.isChunkLoaded(world: World = this.world, chunkSection: BlockPosition) =
     isChunkLoaded(world, chunkSection.x, chunkSection.z)
 
-val ChunkPointer.loadedByPlayers
+val ChunkPosition.loadedByPlayers
     get() = PlayerChunks[this]
 
 val Chunk.loadedByPlayers
-    get() = asChunkPointer().loadedByPlayers
+    get() = chunkPosition.loadedByPlayers
 
-fun ChunkPointer.isLoaded(player: Player) = player in loadedByPlayers
+fun ChunkPosition.isLoaded(player: Player) = player in loadedByPlayers
 
-fun Chunk.isLoaded(player: Player) = asChunkPointer().isLoaded(player)
+fun Chunk.isLoaded(player: Player) = chunkPosition.isLoaded(player)
 
-fun Block.isLoaded(player: Player) = getChunkPointer().isLoaded(player)
+fun Block.isLoaded(player: Player) = chunkPosition.isLoaded(player)

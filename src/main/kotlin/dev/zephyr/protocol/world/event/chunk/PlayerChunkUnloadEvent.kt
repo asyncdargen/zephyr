@@ -1,12 +1,12 @@
 package dev.zephyr.protocol.world.event.chunk
 
 import dev.zephyr.event.HandlerListHolder
-import dev.zephyr.protocol.world.ChunkPointer
+import dev.zephyr.protocol.world.ChunkPosition
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.entity.Player
 
 @KotlinOpens
-class PlayerChunkUnloadEvent(player: Player, pointer: ChunkPointer) : PlayerChunkEvent(player, pointer) {
+class PlayerChunkUnloadEvent(player: Player, position: ChunkPosition) : PlayerChunkEvent(player, position) {
     companion object : HandlerListHolder() {
 
         @JvmStatic

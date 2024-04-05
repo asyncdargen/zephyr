@@ -6,17 +6,15 @@ import dev.zephyr.protocol.entity.EntityProtocol
 import dev.zephyr.protocol.scoreboard.ScoreboardProtocol
 import dev.zephyr.protocol.world.PlayerChunks
 import dev.zephyr.protocol.world.StructureProtocol
-import dev.zephyr.util.java.JLogger
 import dev.zephyr.util.java.openJavaModules
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 
 object Zephyr : Listener {
 
-    val Logger: JLogger = JLogger.getLogger("Zephyr")
-
     lateinit var Plugin: JavaPlugin
 
+    val Logger by lazy { Plugin.logger}
     val DataFolder by lazy { Plugin.dataFolder.toPath() }
     val PluginNamespace by lazy { Plugin.name.lowercase() }
 

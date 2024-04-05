@@ -36,6 +36,12 @@ inline fun <reified C> Any.cast() = this as C
 
 inline fun <reified C> Any?.safeCast() = this as? C
 
+inline fun <reified C, T> T.castOr(default: (T) -> C) = this as? C ?: default(this)
+
+inline fun Any?.takeIfEqual(any: Any?) = takeIf { it == any }
+
+inline fun Any?.takeIfRef(any: Any?) = takeIf { it === any }
+
 fun <T, R, M> Function1<T, R>.map(mapper: (R) -> M) = { it: T -> mapper(this(it)) }
 
 fun <T, R, M> Function1<T, R>.mapFully(mapper: (T, R) -> M) = { it: T -> mapper(it, this(it)) }

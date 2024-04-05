@@ -11,6 +11,10 @@ object Protocol {
 
     val ProtocolManager by lazy { ProtocolLibrary.getProtocolManager() }
 
+    init {
+        NativeProtocol
+    }
+
     fun onReceive(vararg types: PacketType, async: Boolean = false, handler: PacketEvent.() -> Unit) =
         object : PacketAdapter(
             AdapterParameteters()

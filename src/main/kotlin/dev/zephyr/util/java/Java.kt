@@ -25,7 +25,7 @@ fun uuidFromUnsignedString(uuid: String) = UUID(
 fun Throwable?.throwIfNonNull() = this?.let { throw it }
 
 fun openJavaModules(vararg modules: String) {
-    val moduleClass = classOrNull<Any>("java.lang.Module") ?: return
+    val moduleClass = Module::class.java
     val moduleField = Class::class.java.getDeclaredField("module")
 
     val module = moduleField.getObjectWithUnsafe<Any>(Any::class.java)

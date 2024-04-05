@@ -6,20 +6,22 @@ import com.comphenix.protocol.wrappers.WrappedBlockData.createData
 import dev.zephyr.event.EventContext
 import dev.zephyr.event.filter
 import dev.zephyr.protocol.ProtocolObject
-import dev.zephyr.protocol.asBlockPosition
-import dev.zephyr.protocol.asLocation
-import dev.zephyr.protocol.getChunkSection
-import dev.zephyr.protocol.packet.world.PacketMultiBlockChange
+import dev.zephyr.protocol.createWrappedBlockData
+import dev.zephyr.protocol.packet.world.PacketBlockChange
+import dev.zephyr.protocol.world.batch.BlockBatcher
+import dev.zephyr.protocol.world.batch.DirectPacketBlockBatcher
+import dev.zephyr.protocol.world.block.ProtocolBlock
 import dev.zephyr.protocol.world.event.block.ProtocolBlockEvent
+import dev.zephyr.protocol.wrap
 import dev.zephyr.util.block.AirBlockData
-import dev.zephyr.util.bukkit.at
+import dev.zephyr.util.block.WrappedAirBlockData
 import dev.zephyr.util.bukkit.isChunkLoaded
 import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.concurrent.threadLocal
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.map
-import dev.zephyr.util.kotlin.mapFully
 import dev.zephyr.util.shape.Shape
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.World
@@ -27,19 +29,18 @@ import org.bukkit.block.Block
 import org.bukkit.block.data.BlockData
 import org.bukkit.entity.Player
 
-typealias StructureBlock = ProtocolStructure.ProtocolStructureBlock
-private typealias ChunkBlockMap = MutableMap<ChunkSection, MutableMap<BlockPosition, StructureBlock>>
-private typealias Context = Pair<MutableSet<ChunkSection>/*batch updates*/, MutableSet<BlockPosition>/*damages*/>
-
-private val Context.chunks get() = first
-private val Context.blockDamages get() = second
+private typealias ChunkBlockMap = MutableMap<Position, Array<WrappedBlockData?>>
 
 @KotlinOpens
 class ProtocolStructure(val world: World) : ProtocolObject() {
 
-    protected val contexts = threadLocal<Context> { mutableSetOf<ChunkSection>() to mutableSetOf() }
+    protected val contexts = threadLocal { ProtocolStructureBatch() }
 
-    val chunkMap: ChunkBlockMap = concurrentHashMapOf()
+    var batcher: BlockBatcher = DirectPacketBlockBatcher
+    var removeByReplace = true
+
+    val chunkMap: ChunkBlockMap = concurrentHashMapOf<Position, Array<WrappedBlockData?>>()
+        .withDefault { arrayOfNulls(4096) }
     val chunksSections by chunkMap::keys
 
     override fun sendSpawnPackets(players: Collection<Player>) {
@@ -50,61 +51,45 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
         //todo: do
     }
 
-    //setting
-    fun put(block: ProtocolBlock) = set(block.position, block)
 
-    operator fun set(blockPosition: BlockPosition, block: ProtocolBlock) = StructureBlock(block).apply {
+    operator fun set(position: Position, data: WrappedBlockData) {
         val context = contexts.getOrNull()
-        context ?: removeBlock(blockPosition)
 
-        chunkMap.getOrPut(block.chunkSection, ::concurrentHashMapOf)[position] = this
-        block.sendSpawnPackets(viewers)
-        context?.chunks?.add(chunkSection)
+        chunkMap.getOrPut(position.chunkSection, ::concurrentHashMapOf)[position] = data
+
+        context?.chunksSections?.add(position.chunkSection)
     }
 
-    operator fun set(location: Location, block: ProtocolBlock) =
-        set(location.asBlockPosition(), block)
+    operator fun set(location: Location, blockData: WrappedBlockData) = set(location.position, blockData)
 
-    operator fun set(bukkitBlock: Block, block: ProtocolBlock) =
-        set(bukkitBlock.location, block)
+    operator fun set(block: Block, blockData: WrappedBlockData) = set(block.position, blockData)
 
-    operator fun set(x: Number, y: Number, z: Number, block: ProtocolBlock) =
-        set(world.at(x, y, z), block)
+    operator fun set(position: BlockPosition, blockData: WrappedBlockData) = set(position.position, blockData)
 
-    operator fun set(location: Location, blockData: WrappedBlockData) =
-        put(StructureBlock(location, blockData))
-
-    operator fun set(bukkitBlock: Block, blockData: WrappedBlockData) =
-        set(bukkitBlock.location, blockData)
-
-    operator fun set(blockPosition: BlockPosition, blockData: WrappedBlockData) =
-        set(blockPosition.asLocation(world), blockData)
+    operator fun set(x: Int, y: Int, z: Int, blockData: WrappedBlockData) = set(Position(x, y, z), blockData)
 
 
-    operator fun set(location: Location, blockData: BlockData) =
-        set(location, createData(blockData))
+    operator fun set(position: Position, blockData: BlockData) = set(position, createData(blockData))
 
-    operator fun set(bukkitBlock: Block, blockData: BlockData) =
-        set(bukkitBlock.location, blockData)
+    operator fun set(location: Location, blockData: BlockData) = set(location.position, createData(blockData))
 
-    operator fun set(blockPosition: BlockPosition, blockData: BlockData) =
-        set(blockPosition.asLocation(world), blockData)
+    operator fun set(block: Block, blockData: BlockData) = set(block.position, blockData)
 
-    operator fun set(x: Number, y: Number, z: Number, blockData: BlockData) =
-        set(world.at(x, y, z), blockData)
+    operator fun set(position: BlockPosition, blockData: BlockData) = set(position.position, blockData)
 
-    operator fun set(location: Location, material: Material) =
-        set(location, material.createBlockData())
+    operator fun set(x: Int, y: Int, z: Int, blockData: BlockData) = set(Position(x, y, z), blockData)
 
-    operator fun set(bukkitBlock: Block, material: Material) =
-        set(bukkitBlock.location, material.createBlockData())
 
-    operator fun set(blockPosition: BlockPosition, material: Material) =
-        set(blockPosition, material.createBlockData())
+    operator fun set(location: Location, material: Material) = set(location, material.createBlockData())
 
-    operator fun set(x: Number, y: Number, z: Number, material: Material) =
-        set(x, y, z, material.createBlockData())
+    operator fun set(block: Block, material: Material) = set(block.position, material.createBlockData())
 
+    operator fun set(position: BlockPosition, material: Material) = set(position.position, material.createBlockData())
+
+    operator fun set(x: Int, y: Int, z: Int, material: Material) = set(Position(x, y, z), material.createBlockData())
+
+
+    fun getOrCreate(position: Position) = get(position) ?: set(position, AirBlockData)
 
     fun getOrCreate(location: Location) = get(location) ?: set(location, AirBlockData)
 
@@ -112,98 +97,92 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     fun getOrCreate(position: BlockPosition) = get(position) ?: set(position, AirBlockData)
 
-    fun getOrCreate(x: Number, y: Number, z: Number) = get(x, y, z) ?: set(x, y, z, AirBlockData)
+    fun getOrCreate(x: Int, y: Int, z: Int) = get(x, y, z) ?: set(x, y, z, AirBlockData)
 
 
     //getting
-    operator fun get(blockPosition: BlockPosition) = chunkMap[blockPosition.getChunkSection()]?.get(blockPosition)
+    operator fun get(position: Position) = chunkMap[position.chunkSection]?.get(position)
 
-    operator fun get(location: Location) = get(location.asBlockPosition())
+    operator fun get(position: BlockPosition) = get(position.position)
 
-    operator fun get(bukkitBlock: Block) = bukkitBlock.takeIf { it.world === world }?.location?.let { get(it) }
+    operator fun get(location: Location) = get(location.position)
 
-    operator fun get(x: Number, y: Number, z: Number) = get(BlockPosition(x.toInt(), y.toInt(), z.toInt()))
+    operator fun get(block: Block) = block.takeIf { it.world === world }?.let { get(it.location.position) }
+
+    operator fun get(x: Int, y: Int, z: Int) = get(Position(x, y, z))
 
     //checks
-    operator fun contains(blockPosition: BlockPosition) =
-        blockPosition in (chunkMap[blockPosition.getChunkSection()] ?: emptyMap())
+
+    operator fun contains(position: Position) = position in (chunkMap[position.chunkSection] ?: emptyMap())
+
+    operator fun contains(position: BlockPosition) = contains(position.position)
 
     operator fun contains(location: Location) =
-        location.world === world && location.asBlockPosition() in this
+        contains(location.blockX, location.blockY, location.blockZ, location.world)
 
-    fun contains(x: Number, y: Number, z: Number, world: World = this.world) =
-        world === this.world && BlockPosition(x.toInt(), y.toInt(), z.toInt()) in this
+    fun contains(x: Int, y: Int, z: Int, world: World = this.world) =
+        world === this.world && BlockPosition(x, y, z) in this
 
     //removing
 
-    fun remove(blockPosition: BlockPosition) = get(blockPosition)?.clear()
+    fun remove(position: Position) = get(position)?.let {
+        chunkMap[position.chunkSection]?.remove(position)
+        position.sendBlockData(if (removeByReplace) position.toBlock(world).blockData.wrap() else AirBlockData.wrap())
+    }
 
-    fun remove(location: Location) = get(location)?.clear()
+    fun remove(position: BlockPosition) = remove(position.position)
 
-    fun remove(bukkitBlock: Block) = get(bukkitBlock)?.clear()
+    fun remove(location: Location) = remove(location.position)
 
-    fun remove(x: Number, y: Number, z: Number) = get(x, y, z)?.clear()
+    fun remove(block: Block) = remove(block.position)
 
-    fun removeBlock(position: BlockPosition) =
-        chunkMap[position.getChunkSection()]
-            ?.remove(position)
-            ?.sendDestroyPackets(viewers)
+    fun remove(x: Int, y: Int, z: Int) = remove(Position(x, y, z))
 
-    fun removeBlock(block: ProtocolBlock) = removeBlock(block.position)
+    fun clear(position: Position) = set(position, AirBlockData.wrap())
 
-    fun removeBlock(location: Location) = removeBlock(location.asBlockPosition())
+    fun clear(position: BlockPosition) = clear(position.position)
 
-    fun removeBlock(x: Number, y: Number, z: Number) =
-        removeBlock(BlockPosition(x.toInt(), y.toInt(), z.toInt()))
+    fun clear(block: ProtocolBlock) = clear(block.position)
+
+    fun clear(location: Location) = clear(location.position)
+
+    fun clear(x: Int, y: Int, z: Int) = clear(Position(x, y, z))
 
     //filling
-    fun fillBlocks(shape: Shape, mapper: (Location) -> StructureBlock?) =
-        shape.asSequence().mapNotNull(mapper).apply { forEach { put(it) } }
-
     fun fill(shape: Shape, mapper: (Location) -> WrappedBlockData?) =
-        fillBlocks(shape, mapper.mapFully { block, data -> data?.let { StructureBlock(block, it) } })
+        shape.mapNotNull { block -> mapper(block)?.let { set(block.position, it) } }
 
-    fun fillData(shape: Shape, mapper: (Location) -> BlockData?) =
-        fill(shape, mapper.map { WrappedBlockData.createData(it) })
+    fun fillData(shape: Shape, mapper: (Location) -> BlockData?) = fill(shape, mapper.map { it?.wrap() })
 
     fun fillMaterials(shape: Shape, mapper: (Location) -> Material?) =
-        fillData(shape, mapper.map { it?.let(Material::createBlockData) })
+        fill(shape, mapper.map { it?.createWrappedBlockData() })
 
     operator fun get(shape: Shape) = shape.asSequence().mapNotNull { get(it) }
 
     fun remove(shape: Shape) = shape.forEach { remove(it) }
 
     fun update(
-        sections: Collection<ChunkSection> = chunksSections,
-        players: Collection<Player> = viewers
-    ) {
-        sections
-            .asSequence()
-            .map { it.pointer(world) }
-            .associateWith { chunk -> players.filter { it.isChunkLoaded(chunk) } }
-            .forEach { (chunkSection, players) ->
-                sendChunk(chunkSection.section, players)
-                chunkMap[chunkSection.section]?.values
-                    ?.asSequence()
-                    ?.filter { it.blockDamage >= 0.1 }
-                    ?.forEach { it.sendBlockDamage(players = players) }
-            }
-    }
+        sections: Collection<Position> = chunksSections, players: Collection<Player> = viewers
+    ) = sections
+        .associateWith { chunk -> players.filter { it.isChunkLoaded(world, chunk) } }
+        .forEach { (chunkSection, players) -> sendChunk(chunkSection, players) }
 
-    fun update(sections: Collection<ChunkSection> = chunksSections, vararg players: Player) =
+    fun update(sections: Collection<Position> = chunksSections, vararg players: Player) =
         update(sections, players.toList())
 
-    fun sendChunk(chunkSection: ChunkSection, players: Collection<Player>) = PacketMultiBlockChange().also {
-        it.setMeta("protocol", true)
-        it.flag = true
-        it.chunkSection = chunkSection
-        it.blocksByPositions = chunkMap[chunkSection]
-            ?.values
-            ?.associate { block -> block.position to block.wrappedBlockData } ?: emptyMap()
-    }.sendOrSendAll(players)
+    fun sendChunk(chunkSection: Position, players: Collection<Player>) {
+//        PacketMultiBlockChange().also{
+//            it.setMeta("protocol", true)
+//            it.flag = true
+//            it.chunkSection = chunkSection
+//            it.blocksByPositions = chunkMap[chunkSection]
+//                ?.asSequence()
+//                ?.associate { (position, data) -> position.blockPos to data } ?: emptyMap()
+//        }.sendOrSendAll(players)
+        batcher.batch(chunkSection, chunkMap[chunkSection] ?: emptyMap(), true, players.ifEmpty { viewers })
+    }
 
-    fun sendChunk(chunkSection: ChunkSection, vararg players: Player) =
-        sendChunk(chunkSection, players.toList())
+    fun sendChunk(chunkSection: Position, vararg players: Player) = sendChunk(chunkSection, players.toList())
 
     fun batch(block: ProtocolStructure.() -> Unit): ProtocolStructure {
         val new = !contexts.contains()
@@ -213,8 +192,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
         if (new) {
             contexts.remove()
-            update(context.chunks)
-            context.blockDamages.forEach { get(it)?.sendBlockDamage() }
+            update(context.chunksSections)
         }
 
         return this
@@ -234,37 +212,27 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
         ctx.filter<ProtocolBlockEvent> { it.structure === this }
     }
 
-    @KotlinOpens
-    inner class ProtocolStructureBlock(location: Location, blockData: WrappedBlockData) :
-        ProtocolBlock(location, blockData) {
-        constructor(block: ProtocolBlock) : this(block.location, block.wrappedBlockData) {
-            blockDamage = block.blockDamage
-        }
+    inner class ProtocolStructureBatch(val chunksSections: MutableSet<Position> = ObjectOpenHashSet())
 
-        val structure get() = this@ProtocolStructure
+    fun Position.sendBlockData(data: WrappedBlockData = get(this) ?: AirBlockData.wrap(), players: Collection<Player>) =
+        PacketBlockChange().also {
+            it.wrappedData = data
+            it.position = blockPos
+            it.setMeta("protocol", true)
+        }.sendOrSendAll(players)
 
-        override fun sendBlockDamage(damage: Double, players: Collection<Player>) {
-            if ((players === viewers || players.isEmpty()) && contexts.contains()) {
-                contexts.get().blockDamages.add(position)
-                return
-            }
+    fun Position.sendBlockData(data: WrappedBlockData = get(this) ?: AirBlockData.wrap(), vararg players: Player) =
+        sendBlockData(data, players.toList())
 
-            super.sendBlockDamage(damage, players)
-        }
+    companion object {
 
-        override fun sendBlockData(data: WrappedBlockData, players: Collection<Player>) {
-            if ((players === viewers || players.isEmpty()) && contexts.contains()) {
-                contexts.get().chunks.add(chunkSection)
-                return
-            }
+        val Position.localBlockIndex
+            get() = chunkBlockPosition.run { ((x and 0xF) shl 8) or ((y and 0xF) shl 4) or (z and 0xF) shl 0  }
 
-            super.sendBlockData(data, players)
-        }
-
-        override var viewers = this@ProtocolStructure.viewers
-
-        override fun hashCode() = position.hashCode()
+        val Int.localBlockPosition
+            get() = Position(this shr 8 and 0xF, this shr 4 and 0xF,  this and 0xF)
 
     }
 
 }
+

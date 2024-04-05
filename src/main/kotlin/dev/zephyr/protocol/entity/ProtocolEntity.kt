@@ -7,7 +7,6 @@ import com.comphenix.protocol.wrappers.WrappedChatComponent
 import dev.zephyr.event.EventContext
 import dev.zephyr.event.filter
 import dev.zephyr.protocol.ProtocolObject
-import dev.zephyr.protocol.asChunkPointer
 import dev.zephyr.protocol.entity.event.PlayerFakeEntityInteractEvent
 import dev.zephyr.protocol.entity.metadata.MetadataItem
 import dev.zephyr.protocol.entity.metadata.MetadataType
@@ -21,6 +20,7 @@ import dev.zephyr.protocol.scoreboard.ProtocolScoreboardTeam
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamAction
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
+import dev.zephyr.protocol.world.position
 import dev.zephyr.util.bukkit.boundingBox
 import dev.zephyr.util.bukkit.clearAngles
 import dev.zephyr.util.bukkit.loadedByPlayers
@@ -108,8 +108,12 @@ class ProtocolEntity(
 
     val boundingBox = type.boundingBox
     val positionBox get() = boundingBox.clone().shift(location)
+
     var location by observable(location) { _, _ -> spawnLocal() }
-    val chunkPointer get() = location.asChunkPointer()
+
+    val chunkPosition get() = location.position.chunk
+    val chunkSectionPosition get() = location.position.chunkSection
+
     val chunk get() = location.chunk
     val world get() = location.world
 
@@ -395,14 +399,14 @@ class ProtocolEntity(
     }
 
     fun spawnLocal() {
-        if (isRegistered()) chunkPointer.loadedByPlayers
+        if (isRegistered()) chunkPosition.toChunkPosition(world).loadedByPlayers
             .filter { hasAccess(it) && !isSpawned(it) }
             .ifNotEmpty(this::spawn)
     }
 
     fun refreshViewers() {
         viewers
-            .filterNot { hasAccess(it) && it in chunkPointer.loadedByPlayers }
+            .filterNot { hasAccess(it) && it in chunkPosition.toChunkPosition(world).loadedByPlayers }
             .ifNotEmpty(this::destroy)
 
         spawnLocal()

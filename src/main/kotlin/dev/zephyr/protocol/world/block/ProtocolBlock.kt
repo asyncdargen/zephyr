@@ -1,15 +1,17 @@
-package dev.zephyr.protocol.world
+package dev.zephyr.protocol.world.block
 
 import com.comphenix.protocol.wrappers.WrappedBlockData
 import dev.zephyr.event.EventContext
 import dev.zephyr.event.filter
-import dev.zephyr.protocol.*
+import dev.zephyr.protocol.ProtocolObject
 import dev.zephyr.protocol.packet.world.PacketBlockChange
 import dev.zephyr.protocol.packet.world.PacketBlockDestroyAnimation
+import dev.zephyr.protocol.unwrap
+import dev.zephyr.protocol.world.Position
 import dev.zephyr.protocol.world.event.block.ProtocolBlockEvent
+import dev.zephyr.protocol.wrap
 import dev.zephyr.util.block.AirBlockData
 import dev.zephyr.util.block.positionHash
-import dev.zephyr.util.bukkit.block
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.observable
 import org.bukkit.Location
@@ -18,10 +20,10 @@ import org.bukkit.block.data.BlockData
 import org.bukkit.entity.Player
 
 @KotlinOpens
-class ProtocolBlock(location: Location, wrappedBlockData: WrappedBlockData) : ProtocolObject() {
-    constructor(location: Location, blockData: BlockData) : this(location, WrappedBlockData.createData(blockData))
+abstract class ProtocolBlock(wrappedBlockData: WrappedBlockData = AirBlockData.wrap()) : ProtocolObject() {
+    constructor(blockData: BlockData) : this(WrappedBlockData.createData(blockData))
 
-    var blockDamage by observable(.0) { _, damage -> sendBlockDamage(damage) }
+    var damage by observable(.0) { _, damage -> sendBlockDamage(damage) }
     var wrappedBlockData by observable(wrappedBlockData) { _, data -> sendBlockData(data) }
     var blockData: BlockData
         get() = wrappedBlockData.unwrap()
@@ -34,15 +36,18 @@ class ProtocolBlock(location: Location, wrappedBlockData: WrappedBlockData) : Pr
             blockData = value.createBlockData()
         }
 
-    val location = location.block()
-    val world by location::world
-    val chunk by location::chunk
-    val position = location.asBlockPosition()
-    val chunkSection get() = position.getChunkSection()
+    abstract val location: Location
+    abstract val position: Position
+
+    val world get() = location.world
+    val chunk get() = location.chunk
+
+    val chunkPosition get() = position.chunk
+    val chunkSectionPosition get() = position.chunkSection
 
     override fun sendSpawnPackets(players: Collection<Player>) {
         sendBlockData(wrappedBlockData, players)
-        sendBlockDamage(blockDamage, players)
+        sendBlockDamage(damage, players)
     }
 
     override fun sendDestroyPackets(players: Collection<Player>) {
@@ -50,40 +55,35 @@ class ProtocolBlock(location: Location, wrappedBlockData: WrappedBlockData) : Pr
         sendBlockDamage(.0, players)
     }
 
-    fun sendBlockData(data: WrappedBlockData, players: Collection<Player>) = PacketBlockChange().also {
-        it.wrappedData = data
-        it.position = position
-        it.setMeta("protocol", true)
-    }.sendOrSendAll(players)
+    fun sendBlockData(data: WrappedBlockData = this.wrappedBlockData, players: Collection<Player> = viewers) =
+        PacketBlockChange().also {
+            it.wrappedData = data
+            it.position = position.blockPos
+            it.setMeta("protocol", true)
+        }.sendOrSendAll(players)
 
-    fun sendBlockData(data: WrappedBlockData, vararg players: Player) =
+    fun sendBlockData(data: WrappedBlockData = this.wrappedBlockData, vararg players: Player) =
         sendBlockData(data, players.toList())
 
-    fun sendBlockDamage(damage: Double = this.blockDamage, players: Collection<Player>) = PacketBlockDestroyAnimation().also {
-        it.entityId = position.positionHash.toInt()
-        it.percent = damage
-        it.position = position
-        it.setMeta("protocol", true)
-    }.sendOrSendAll(players)
+    fun sendBlockDamage(damage: Double = this.damage, players: Collection<Player> = viewers) =
+        PacketBlockDestroyAnimation().also {
+            it.entityId = position.positionHash.toInt()
+            it.percent = damage
+            it.blockPosition = position.blockPos
+            it.setMeta("protocol", true)
+        }.sendOrSendAll(players)
 
-    fun sendBlockDamage(damage: Double = this.blockDamage, vararg players: Player) =
+    fun sendBlockDamage(damage: Double = this.damage, vararg players: Player) =
         sendBlockDamage(damage, players.toList())
 
     fun clear() = apply {
         blockData = AirBlockData
-        blockDamage = .0
+        damage = .0
     }
-
-    fun register() = apply { StructureProtocol.Blocks.add(this) }
 
     fun copy(protocolBlock: ProtocolBlock) = apply {
-        this.blockDamage = protocolBlock.blockDamage
+        this.damage = protocolBlock.damage
         this.blockData = protocolBlock.blockData
-    }
-
-    override fun remove() {
-        StructureProtocol.Blocks.remove(this)
-        super.remove()
     }
 
     override fun filterEvents(ctx: EventContext) {
