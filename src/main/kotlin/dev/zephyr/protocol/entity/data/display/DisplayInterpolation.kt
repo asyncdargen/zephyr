@@ -90,7 +90,7 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
     fun process() {
         if (cancelled) return
         entity.modify {
-            interpolationDelay = 1
+            interpolationDelay = 0
             interpolationDuration = duration.toInt()
             action()
         }
@@ -108,8 +108,8 @@ data class DisplayDelayedInterpolation<D : ProtocolDisplay>(
         cancelled = true
         if (this::task.isInitialized) task.cancel()
         entity.modify {
-            interpolationDelay = 0
-            interpolationDuration = 0
+            interpolationDelay = -1
+            interpolationDuration = -1
         }
     }
 
