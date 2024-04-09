@@ -1,17 +1,19 @@
-package dev.zephyr.protocol.world
+package dev.zephyr.protocol.world.structure
 
 import com.comphenix.protocol.wrappers.BlockPosition
 import com.comphenix.protocol.wrappers.WrappedBlockData
-import com.comphenix.protocol.wrappers.WrappedBlockData.createData
 import dev.zephyr.event.EventContext
 import dev.zephyr.event.filter
 import dev.zephyr.protocol.ProtocolObject
 import dev.zephyr.protocol.createWrappedBlockData
 import dev.zephyr.protocol.packet.world.PacketBlockChange
+import dev.zephyr.protocol.world.Position
+import dev.zephyr.protocol.world.StructureProtocol
 import dev.zephyr.protocol.world.batch.BlockBatcher
 import dev.zephyr.protocol.world.batch.DirectPacketBlockBatcher
 import dev.zephyr.protocol.world.block.ProtocolBlock
 import dev.zephyr.protocol.world.event.block.ProtocolBlockEvent
+import dev.zephyr.protocol.world.position
 import dev.zephyr.protocol.wrap
 import dev.zephyr.util.block.AirBlockData
 import dev.zephyr.util.bukkit.isChunkLoaded
@@ -28,7 +30,7 @@ import org.bukkit.block.Block
 import org.bukkit.block.data.BlockData
 import org.bukkit.entity.Player
 
-private typealias ChunkBlockMap = MutableMap<Position, Array<WrappedBlockData?>>
+private typealias ChunkBlockMap = MutableMap<Position, ProtocolStructure.StructureChunk>
 
 @KotlinOpens
 class ProtocolStructure(val world: World) : ProtocolObject() {
@@ -38,7 +40,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
     var batcher: BlockBatcher = DirectPacketBlockBatcher
     var removeByReplace = true
 
-    val chunkMap: ChunkBlockMap = concurrentHashMapOf<Position, Array<WrappedBlockData?>>()
+    val chunkMap: ChunkBlockMap = concurrentHashMapOf<Position, StructureChunk>()
 
     val chunksSections by chunkMap::keys
 
@@ -50,13 +52,13 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
         //todo: do
     }
 
+    fun getChunk(position: Position) = chunkMap[position]
+
+    fun getBlockChunk(position: Position) = getChunk(position.chunkSection)
+
 
     operator fun set(position: Position, data: WrappedBlockData) {
-        val context = contexts.getOrNull()
-
-        chunkMap.getOrPut(position.chunkSection) { arrayOfNulls(4096) }[position.chunkBlockPositionIndex] = data
-
-        context?.chunksSections?.add(position.chunkSection)
+        chunkMap.getOrPut(position.chunkSection) { StructureChunk(position.chunkSection) }[position] = data
     }
 
     operator fun set(location: Location, blockData: WrappedBlockData) = set(location.position, blockData)
@@ -68,9 +70,12 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
     operator fun set(x: Int, y: Int, z: Int, blockData: WrappedBlockData) = set(Position(x, y, z), blockData)
 
 
-    operator fun set(position: Position, blockData: BlockData) = set(position, createData(blockData))
+    operator fun set(position: Position, blockData: BlockData) = set(position, WrappedBlockData.createData(blockData))
 
-    operator fun set(location: Location, blockData: BlockData) = set(location.position, createData(blockData))
+    operator fun set(location: Location, blockData: BlockData) = set(
+        location.position,
+        WrappedBlockData.createData(blockData)
+    )
 
     operator fun set(block: Block, blockData: BlockData) = set(block.position, blockData)
 
@@ -100,7 +105,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
 
     //getting
-    operator fun get(position: Position) = chunkMap[position.chunkSection]?.get(position.chunkBlockPositionIndex)
+    operator fun get(position: Position) = getBlockChunk(position)?.get(position)
 
     operator fun get(position: BlockPosition) = get(position.position)
 
@@ -112,7 +117,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     //checks
 
-    operator fun contains(position: Position) = chunkMap[position.chunkSection]?.get(position.chunkBlockPositionIndex) != null
+    operator fun contains(position: Position) = getBlockChunk(position)?.contains(position) == true
 
     operator fun contains(position: BlockPosition) = contains(position.position)
 
@@ -124,10 +129,9 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     //removing
 
-    fun remove(position: Position) = get(position)?.let {
-        chunkMap[position.chunkSection]!![position.chunkBlockPositionIndex] = null
-        position.sendBlockData(if (removeByReplace) position.toBlock(world).blockData.wrap() else AirBlockData.wrap())
-    }
+    fun removeChunkBlocks(chunkPosition: Position) = getChunk(chunkPosition)?.remove()
+
+    fun remove(position: Position) = getBlockChunk(position)?.remove(position)
 
     fun remove(position: BlockPosition) = remove(position.position)
 
@@ -137,7 +141,10 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     fun remove(x: Int, y: Int, z: Int) = remove(Position(x, y, z))
 
-    fun clear(position: Position) = set(position, AirBlockData.wrap())
+
+    fun clearChunkBlocks(chunkPosition: Position) = getChunk(chunkPosition)?.clear()
+
+    fun clear(position: Position) = getBlockChunk(position)?.clear(position)
 
     fun clear(position: BlockPosition) = clear(position.position)
 
@@ -178,7 +185,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 //                ?.asSequence()
 //                ?.associate { (position, data) -> position.blockPos to data } ?: emptyMap()
 //        }.sendOrSendAll(players)
-        batcher.batch(chunkSection, chunkMap[chunkSection] ?: arrayOfNulls(0), true, players.ifEmpty { viewers })
+        batcher.batch(chunkSection, chunkMap[chunkSection]?.blocks ?: arrayOfNulls(0), true, players.ifEmpty { viewers })
     }
 
     fun sendChunk(chunkSection: Position, vararg players: Player) = sendChunk(chunkSection, players.toList())
@@ -223,6 +230,8 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
     fun Position.sendBlockData(data: WrappedBlockData = get(this) ?: AirBlockData.wrap(), vararg players: Player) =
         sendBlockData(data, players.toList())
 
+    val Position.defaultBlockData get() = if (removeByReplace) toBlock(world).blockData.wrap() else AirBlockData.wrap()
+
     companion object {
 
         val Int.localBlockPosition
@@ -230,5 +239,42 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     }
 
-}
 
+    inner class StructureChunk(val position: Position, val blocks: Array<WrappedBlockData?> = arrayOfNulls(4096)) {
+
+        operator fun get(position: Position) = blocks[position.chunkBlockPositionIndex]
+
+        operator fun set(position: Position, block: WrappedBlockData?) {
+            val context = contexts.getOrNull()
+            blocks[position.chunkBlockPositionIndex] = block
+            context?.chunksSections?.add(position.chunkSection)
+                ?: run { position.sendBlockData(block ?: position.defaultBlockData, players = viewers) }
+        }
+
+        fun remove(position: Position) = set(position, null)
+
+        fun clear(position: Position) = set(position, position.defaultBlockData)
+
+        fun remove() = forEach { position, _ -> remove(position) }
+
+        fun clear() = forEach { position, _ -> clear(position) }
+
+        operator fun contains(position: Position) = get(position) != null
+
+        inline fun forEachNullable(action: (Position, WrappedBlockData?) -> Unit) {
+            blocks.forEachIndexed { index, data -> action(index.localBlockPosition.diff(position.minChunkBlock), data) }
+        }
+
+        inline fun forEach(action: (Position, WrappedBlockData) -> Unit) {
+            blocks.forEachIndexed { index, data ->
+                if (data != null) action(
+                    index.localBlockPosition.diff(position.minChunkBlock),
+                    data
+                )
+            }
+        }
+
+
+    }
+
+}

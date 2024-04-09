@@ -8,6 +8,7 @@ import dev.zephyr.protocol.world.block.ProtocolBlock
 import dev.zephyr.protocol.world.event.block.ProtocolBlockClickEvent
 import dev.zephyr.protocol.world.event.block.ProtocolBlockDigEvent
 import dev.zephyr.protocol.world.event.chunk.PlayerChunkLoadEvent
+import dev.zephyr.protocol.world.structure.ProtocolStructure
 import dev.zephyr.util.bukkit.afterAsync
 import dev.zephyr.util.bukkit.call
 import dev.zephyr.util.bukkit.on

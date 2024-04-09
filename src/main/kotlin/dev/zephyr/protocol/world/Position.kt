@@ -26,8 +26,6 @@ value class Position(val key: Long) {
 
     val chunkBlockPositionIndex
         get() = chunkBlockPosition.run { x shl 8 or (z shl 4) or y }
-    val chunkBlockIndex
-        get() = chunkBlockPosition.run { ((x and 0xF) shl 8) or ((y and 0xF) shl 4) or (z and 0xF) shl 0 }
 
 
     val blockPos get() = BlockPosition(x, y, z)

@@ -3,7 +3,7 @@ package dev.zephyr.protocol.world.event.block
 import com.comphenix.protocol.wrappers.EnumWrappers
 import dev.zephyr.event.HandlerListHolder
 import dev.zephyr.protocol.world.Position
-import dev.zephyr.protocol.world.ProtocolStructure
+import dev.zephyr.protocol.world.structure.ProtocolStructure
 import dev.zephyr.protocol.world.block.ProtocolBlock
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.entity.Player
