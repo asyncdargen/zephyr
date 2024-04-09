@@ -129,6 +129,8 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     //removing
 
+    fun removeChunksBlocks() = chunkMap.values.forEach { it.remove() }
+
     fun removeChunkBlocks(chunkPosition: Position) = getChunk(chunkPosition)?.remove()
 
     fun remove(position: Position) = getBlockChunk(position)?.remove(position)
@@ -141,6 +143,8 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     fun remove(x: Int, y: Int, z: Int) = remove(Position(x, y, z))
 
+
+    fun clearChunksBlocks() = chunkMap.values.forEach { it.clear() }
 
     fun clearChunkBlocks(chunkPosition: Position) = getChunk(chunkPosition)?.clear()
 
