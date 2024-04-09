@@ -61,7 +61,7 @@ val Vector.position get() = Position(x.toInt(), y.toInt(), z.toInt())
 
 val BlockPosition.position get() = Position(x, y, z)
 
-class ChunkPosition(val world: World, val position: Position) {
+data class ChunkPosition(val world: World, val position: Position) {
     constructor(world: World, x: Int, y: Int, z: Int) : this(world, Position(x, y, z))
     constructor(world: World, x: Int, z: Int) : this(world, Position(x, 0, z))
 
