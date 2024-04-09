@@ -105,10 +105,14 @@ object NativeProtocol {
         on<PlayerQuitEvent>(EventPriority.HIGHEST) { PlayerChannelsMap.remove(player) }
     }
 
-    fun Player.sendForcePacket(any: Any) {
+    operator fun get(player: Player) = PlayerChannelsMap[player]
+
+    val Player.channel get() = get(this)
+
+    fun Player.sendForcePacket(any: Any, inEventLoop: Boolean = true) {
         when (any) {
-            is PacketContainer-> PlayerChannelsMap[this@sendForcePacket]?.write(any.handle)
-            else -> PlayerChannelsMap[this@sendForcePacket]?.write(any)
+            is PacketContainer -> channel?.write(any.handle)
+            else -> channel?.write(any)
         }
     }
 

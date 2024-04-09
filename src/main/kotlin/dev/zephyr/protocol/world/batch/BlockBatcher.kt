@@ -6,6 +6,8 @@ import org.bukkit.entity.Player
 
 interface BlockBatcher {
 
-    fun batch(section: Position, blocks: Map<Position, WrappedBlockData>, flag: Boolean = true, players: Collection<Player>)
+    fun batch(section: Position, blocks: Map<Position, WrappedBlockData>, flag: Boolean = false, players: Collection<Player>)
+
+    fun batch(section: Position, blocks: Array<WrappedBlockData?>, flag: Boolean = false, players: Collection<Player>)
 
 }

@@ -21,11 +21,6 @@ class PacketMultiBlockChange : ProtocolPacket(PacketPlayOutType.MULTI_BLOCK_CHAN
         it.map { (((it.x and 0xF) shl 8) or ((it.z and 0xF) shl 4) or (it.y and 0xF) shl 0).toShort() }
             .toShortArray()
     }
-    var blockPositionsLocations by writer<Collection<Location>, ShortArray>(0, shortArrays) {
-        it.map { (((it.blockX and 0xF) shl 8) or ((it.blockY and 0xF) shl 4) or (it.blockZ and 0xF) shl 0).toShort() }
-            .toShortArray()
-    }
-
     var blocksDatas by writer<Collection<WrappedBlockData>, Array<WrappedBlockData>>(
         0, blockDataArrays,
         Collection<WrappedBlockData>::toTypedArray
@@ -33,10 +28,6 @@ class PacketMultiBlockChange : ProtocolPacket(PacketPlayOutType.MULTI_BLOCK_CHAN
 
     var blocksByPositions by writer<Map<BlockPosition, WrappedBlockData>> {
         blockPositions = it.keys
-        blocksDatas = it.values
-    }
-    var blocksByLocations by writer<Map<Location, WrappedBlockData>> {
-        blockPositionsLocations = it.keys
         blocksDatas = it.values
     }
 

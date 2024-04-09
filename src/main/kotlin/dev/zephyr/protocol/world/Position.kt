@@ -20,12 +20,22 @@ value class Position(val key: Long) {
 
     val chunk get() = Position(x shr 4, 0, z shr 4)
     val chunkSection get() = Position(x shr 4, y shr 4, z shr 4)
-    val chunkBlockPosition get() = Position(x - x shr 4 shl 4, y - y shr 4 shl 4, z - z shr 4 shl 4)
+
+    val minChunkBlock get() = chunkSection.run { Position(x shl 4, y shl 4, z shl 4) }
+    val chunkBlockPosition get() = diff(minChunkBlock, -1)
+
+    val chunkBlockPositionIndex
+        get() = chunkBlockPosition.run { x shl 8 or (z shl 4) or y }
+    val chunkBlockIndex
+        get() = chunkBlockPosition.run { ((x and 0xF) shl 8) or ((y and 0xF) shl 4) or (z and 0xF) shl 0 }
+
 
     val blockPos get() = BlockPosition(x, y, z)
     val vector get() = Vector(x, y, z)
 
     fun diff(x: Int = 0, y: Int = 0, z: Int = 0) = Position(this.x + x, this.y + y, this.z + z)
+
+    fun diff(position: Position, sign: Int = 1) = diff(position.x * sign, position.y * sign, position.z * sign)
 
     fun clone(x: Int = this.x, y: Int = this.y, z: Int = this.z) = Position(x, y, z)
 
@@ -37,9 +47,13 @@ value class Position(val key: Long) {
 
     fun toChunkSectionPosition(world: World) = ChunkPosition(world, clone(y = 0))
 
+    operator fun component1() = x
+    operator fun component2() = x
+    operator fun component3() = x
+
 }
 
-val Chunk.position get() = Position(x, 0,  z)
+val Chunk.position get() = Position(x, 0, z)
 
 val Block.position get() = Position(x, y, z)
 
@@ -61,7 +75,8 @@ class ChunkPosition(val world: World, val position: Position) {
 
     fun diff(x: Int, y: Int, z: Int) = ChunkPosition(world, position.diff(x, y, z))
 
-    fun clone(world: World = this.world, x: Int = this.x, y: Int = this.y, z: Int = this.z) = ChunkPosition(world, Position(x, y, z))
+    fun clone(world: World = this.world, x: Int = this.x, y: Int = this.y, z: Int = this.z) =
+        ChunkPosition(world, Position(x, y, z))
 
     fun section(y: Int) = clone(y = y)
 
@@ -69,7 +84,7 @@ class ChunkPosition(val world: World, val position: Position) {
 
 }
 
-val Chunk.chunkPosition get() = ChunkPosition(world, Position(x, 0,  z))
+val Chunk.chunkPosition get() = ChunkPosition(world, Position(x, 0, z))
 
 val Location.blockPosition get() = position.blockPos
 

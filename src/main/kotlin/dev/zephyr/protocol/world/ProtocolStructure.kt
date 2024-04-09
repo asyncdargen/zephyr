@@ -14,7 +14,6 @@ import dev.zephyr.protocol.world.block.ProtocolBlock
 import dev.zephyr.protocol.world.event.block.ProtocolBlockEvent
 import dev.zephyr.protocol.wrap
 import dev.zephyr.util.block.AirBlockData
-import dev.zephyr.util.block.WrappedAirBlockData
 import dev.zephyr.util.bukkit.isChunkLoaded
 import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.concurrent.threadLocal
@@ -40,7 +39,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
     var removeByReplace = true
 
     val chunkMap: ChunkBlockMap = concurrentHashMapOf<Position, Array<WrappedBlockData?>>()
-        .withDefault { arrayOfNulls(4096) }
+
     val chunksSections by chunkMap::keys
 
     override fun sendSpawnPackets(players: Collection<Player>) {
@@ -55,7 +54,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
     operator fun set(position: Position, data: WrappedBlockData) {
         val context = contexts.getOrNull()
 
-        chunkMap.getOrPut(position.chunkSection, ::concurrentHashMapOf)[position] = data
+        chunkMap.getOrPut(position.chunkSection) { arrayOfNulls(4096) }[position.chunkBlockPositionIndex] = data
 
         context?.chunksSections?.add(position.chunkSection)
     }
@@ -101,7 +100,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
 
     //getting
-    operator fun get(position: Position) = chunkMap[position.chunkSection]?.get(position)
+    operator fun get(position: Position) = chunkMap[position.chunkSection]?.get(position.chunkBlockPositionIndex)
 
     operator fun get(position: BlockPosition) = get(position.position)
 
@@ -113,7 +112,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     //checks
 
-    operator fun contains(position: Position) = position in (chunkMap[position.chunkSection] ?: emptyMap())
+    operator fun contains(position: Position) = chunkMap[position.chunkSection]?.get(position.chunkBlockPositionIndex) != null
 
     operator fun contains(position: BlockPosition) = contains(position.position)
 
@@ -126,7 +125,7 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
     //removing
 
     fun remove(position: Position) = get(position)?.let {
-        chunkMap[position.chunkSection]?.remove(position)
+        chunkMap[position.chunkSection]!![position.chunkBlockPositionIndex] = null
         position.sendBlockData(if (removeByReplace) position.toBlock(world).blockData.wrap() else AirBlockData.wrap())
     }
 
@@ -179,12 +178,12 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 //                ?.asSequence()
 //                ?.associate { (position, data) -> position.blockPos to data } ?: emptyMap()
 //        }.sendOrSendAll(players)
-        batcher.batch(chunkSection, chunkMap[chunkSection] ?: emptyMap(), true, players.ifEmpty { viewers })
+        batcher.batch(chunkSection, chunkMap[chunkSection] ?: arrayOfNulls(0), true, players.ifEmpty { viewers })
     }
 
     fun sendChunk(chunkSection: Position, vararg players: Player) = sendChunk(chunkSection, players.toList())
 
-    fun batch(block: ProtocolStructure.() -> Unit): ProtocolStructure {
+    fun batch(push: Boolean = true, block: ProtocolStructure.() -> Unit): ProtocolStructureBatch? {
         val new = !contexts.contains()
         val context = contexts.get()
 
@@ -192,10 +191,10 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
         if (new) {
             contexts.remove()
-            update(context.chunksSections)
+            if (push) update(context.chunksSections)
         }
 
-        return this
+        return context
     }
 
     fun register() = apply {
@@ -226,11 +225,8 @@ class ProtocolStructure(val world: World) : ProtocolObject() {
 
     companion object {
 
-        val Position.localBlockIndex
-            get() = chunkBlockPosition.run { ((x and 0xF) shl 8) or ((y and 0xF) shl 4) or (z and 0xF) shl 0  }
-
         val Int.localBlockPosition
-            get() = Position(this shr 8 and 0xF, this shr 4 and 0xF,  this and 0xF)
+            get() = Position(this shr 8 and 0xF, this shr 4 and 0xF, this and 0xF)
 
     }
 

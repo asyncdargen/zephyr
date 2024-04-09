@@ -6,6 +6,14 @@ import dev.zephyr.protocol.world.Position
 import org.bukkit.entity.Player
 
 data object DefaultBlockBatcher : BlockBatcher {
+    override fun batch(
+        section: Position,
+        blocks: Array<WrappedBlockData?>,
+        flag: Boolean,
+        players: Collection<Player>
+    ) {
+        TODO("Not yet implemented")
+    }
 
     override fun batch(
         section: Position, blocks: Map<Position, WrappedBlockData>,
