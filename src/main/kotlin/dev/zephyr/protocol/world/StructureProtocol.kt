@@ -3,7 +3,6 @@ package dev.zephyr.protocol.world
 import dev.zephyr.protocol.PacketPlayInType
 import dev.zephyr.protocol.PacketPlayOutType
 import dev.zephyr.protocol.Protocol
-import dev.zephyr.protocol.packet.world.PacketBlockAck
 import dev.zephyr.protocol.world.block.ProtocolBlock
 import dev.zephyr.protocol.world.event.block.ProtocolBlockClickEvent
 import dev.zephyr.protocol.world.event.block.ProtocolBlockDigEvent
@@ -77,9 +76,9 @@ object StructureProtocol {
 
             isCancelled = true
 
-            PacketBlockAck(packet.integers.read(0)).send(player)
-
-            ProtocolBlockDigEvent(player, position, block, structure, type).call().keeping()
+            ProtocolBlockDigEvent(player, position, block, structure, type, packet.integers.read(0))
+                .call()
+                .keeping()
         }
         Protocol.onReceive(PacketPlayInType.USE_ITEM, async = true) {
             val position = packet.movingBlockPositions.read(0).blockPosition.position
