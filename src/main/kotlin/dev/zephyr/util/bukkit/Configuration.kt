@@ -15,20 +15,29 @@ import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.inventory.ItemStack
 import java.io.File
 import java.io.InputStreamReader
+import java.nio.file.Path
 
-fun loadConfig(name: String, block: ((Configuration) -> Unit)? = null): Configuration = Zephyr.Plugin.run {
-    val configFile = File(dataFolder, name)
+fun loadConfig(file: File, resourceName: String? = null, block: (Configuration) -> Unit = {}): Configuration {
     val config = YamlConfiguration()
 
-    if (!configFile.exists()) {
-        getResource(name)?.let(::InputStreamReader)?.let(config::load)
-        config.save(configFile)
-    } else config.load(configFile)
+    if (!file.exists()) {
+        resourceName?.let {
+            Zephyr.Plugin.getResource(it)?.let(::InputStreamReader)?.let(config::load)
+            config.save(file)
+        }
+    } else config.load(file)
 
-    block?.invoke(config)
+    block.invoke(config)
 
-    config
+    return config
 }
+
+fun loadConfig(path: Path, resourceName: String? = null, block: (Configuration) -> Unit = {}): Configuration =
+    loadConfig(path.toFile(), null, block)
+
+fun loadConfig(name: String, resourceName: String = name, block: (Configuration) -> Unit = {}): Configuration =
+    loadConfig(File(Zephyr.Plugin.dataFolder, name), name, block)
+
 
 fun <T> mapConfig(name: String, block: (Configuration) -> T) = loadConfig(name).run(block)
 
