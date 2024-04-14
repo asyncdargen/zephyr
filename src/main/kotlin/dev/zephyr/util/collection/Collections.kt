@@ -38,3 +38,9 @@ fun <E> MutableCollection<E>.observe(addHandler: (E) -> Unit, removeHandler: (E)
 
 fun <K, V> MutableMap<K, V>.observe(addHandler: (K, V) -> Unit, removeHandler: (K, V?) -> Unit): MutableMap<K, V> =
     ObservableMap(this, addHandler, removeHandler)
+
+inline fun <F, S> forEach2d(first: Iterable<F>, second: Iterable<S>, block: (F, S) -> Unit) =
+    first.forEach { first -> second.forEach { second -> block(first, second) } }
+
+inline fun <F, S, T> forEach3d(first: Iterable<F>, second: Iterable<S>, third: Iterable<T>, block: (F, S, T) -> Unit) =
+    first.forEach { first -> second.forEach { second -> third.forEach { third -> block(first, second, third) } } }

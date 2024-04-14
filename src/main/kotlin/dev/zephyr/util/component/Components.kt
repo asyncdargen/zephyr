@@ -3,6 +3,7 @@ package dev.zephyr.util.component
 import com.comphenix.protocol.wrappers.WrappedChatComponent
 import dev.zephyr.util.format.colored
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
@@ -27,3 +28,5 @@ fun WrappedChatComponent.unwrap() = GsonComponentSerializer.gson().deserialize(j
 fun WrappedChatComponent.unwrap(fallback: Component) = GsonComponentSerializer.gson().deserializeOr(json, fallback)
 
 fun Component.wrap() = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(this))
+
+fun Iterable<Component>.joinLines() = Component.join(JoinConfiguration.newlines(), this)

@@ -22,3 +22,19 @@ class RandomWeightList<T>(private val itemWeight: (T) -> Int, values: Collection
 }
 
 fun <T> Collection<T>.toRandomList(weightMapper: (T) -> Int) = RandomWeightList<T>(weightMapper, this)
+
+fun <T> buildRandomDouble(block: MutableMap<T, Double>.() -> Unit) =
+    buildMap(block)
+        .toList()
+        .toRandomList(Pair<*, Double>::second)
+        .extract(Pair<T, *>::first)
+
+fun <T> buildRandom(block: MutableMap<T, Int>.() -> Unit) =
+    buildMap(block)
+        .toList()
+        .toRandomList(Pair<*, Int>::second)
+        .extract(Pair<T, *>::first)
+
+fun <T> Map<T, Double>.toRandomList() = toList().toRandomList(Pair<*, Double>::second).extract(Pair<T, *>::first)
+
+fun <T> Map<T, Int>.toRandomList() = toList().toRandomList(Pair<*, Int>::second).extract(Pair<T, *>::first)
