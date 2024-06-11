@@ -74,6 +74,6 @@ fun ConfigurationSection.getShortItemStack(key: String, default: ItemStack? = nu
     }
 } ?: default
 
-fun ConfigurationSection.getMiniComponent(key: String) = getString("key").miniComponent()
+fun ConfigurationSection.getMiniComponent(key: String) = getString(key).miniComponent()
 
-fun ConfigurationSection.getMiniComponentList(key: String) = getStringList("key").miniComponents()
+fun ConfigurationSection.getMiniComponentList(key: String) = getStringList(key).miniComponents()

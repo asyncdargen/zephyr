@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'dev.zephyr'
-version = '1.0.93'
+version = '1.0.94'
 
 repositories {
     mavenCentral()
