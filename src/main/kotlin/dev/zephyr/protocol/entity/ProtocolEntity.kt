@@ -279,6 +279,7 @@ class ProtocolEntity(
     fun teleport(destinationLocation: Location = location, vararg players: Player) =
         teleport(destinationLocation, players.toList())
 
+    @Synchronized
     override fun sendMounts(players: Collection<Player>) =
         PacketEntityMount().also {
             it.entityId = entityId
@@ -288,6 +289,7 @@ class ProtocolEntity(
     fun sendMounts(vararg players: Player) =
         sendMounts(players.toList())
 
+    @Synchronized
     override fun mount(entities: Collection<ProtocolEntity>) {
         entities.forEach { it.vehicle = this }
         mounts.addAll(entities)
@@ -295,6 +297,7 @@ class ProtocolEntity(
         sendMounts()
     }
 
+    @Synchronized
     override fun unmount(entities: Collection<ProtocolEntity>) {
         entities.forEach { it.vehicle = null }
         mounts.removeAll(entities.toSet())
@@ -302,6 +305,7 @@ class ProtocolEntity(
         sendMounts()
     }
 
+    @Synchronized
     override fun syncMounts() {
         mounts.forEach { it.location = location.clearAngles() }
     }
