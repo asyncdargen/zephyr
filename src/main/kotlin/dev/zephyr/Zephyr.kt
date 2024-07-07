@@ -37,7 +37,7 @@ object Zephyr : Listener {
         PlayerHooks
 
         repeat(100000) {
-            println("52 $it")
+            println("52 3 $it")
         }
     }
 
