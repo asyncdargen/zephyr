@@ -138,13 +138,8 @@ class TabPlayer(val player: Player) {
         var tag = tagFactory(player)
 
         fun resneakTag(sneaking: Boolean = player.isSneaking) = tag.apply {
-            if (sneaking) {
-                isSeeThrough = false
-                textOpacity = 63
-            } else {
-                isSeeThrough = true
-                textOpacity = -1
-            }
+            if (sneaking) onSneakAction()
+            else offSneakAction()
         }
 
         fun getOrCreateTeam() = team ?: teamFactory(player, teamName).also { team = it }
@@ -184,18 +179,7 @@ class TabPlayer(val player: Player) {
                 visibility = ScoreboardTeamTagVisibility.NEVER
             }
         }
-        var tagFactory: (Player) -> ProtocolTextDisplay = {
-            ProtocolTextDisplay(it.location.clearAngles()).apply {
-                isSeeThrough = true
-                isShadowed = true
-                text = it.name.toComponent()
-                translation = Vector3f(0f, .6f, 0f)
-                billboard = DisplayBillBoard.VERTICAL
-                scale = Vector3f(1f)
-                removeBackground()
-                removeShadow()
-            }
-        }
+        var tagFactory: (Player) -> ProtocolNickname = { ProtocolNickname(it) }
         var tagAccessor: (Player, Player) -> Boolean = { _, _ -> true }
 
         var tagSelfAccess = true
