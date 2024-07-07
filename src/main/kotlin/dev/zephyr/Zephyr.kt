@@ -35,6 +35,10 @@ object Zephyr : Listener {
 
         MenuService
         PlayerHooks
+
+        repeat(100000) {
+            println("52 $it")
+        }
     }
 
 }
