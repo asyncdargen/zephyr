@@ -54,7 +54,7 @@ object TabService {
 
     operator fun get(player: Player) = getSafe(player)!!
 
-    private fun collectProfilePacket(force: Boolean = false): PacketPlayerInfoUpdate? =
+    fun collectProfilePacket(force: Boolean = false): PacketPlayerInfoUpdate? =
         players.values.filter { force || it.dirtyName }
             .map { it.dirtyName = false; it.container.getOrCreateProfile() }
             .takeIfNotEmpty()
