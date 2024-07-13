@@ -19,8 +19,8 @@ object TabService {
 
     var setupBlock: TabPlayer.() -> Unit = {}
 
-    private val QueueLock: Lock = ReentrantLock()
-    private val queued = concurrentSetOf<Player>()
+    val QueueLock: Lock = ReentrantLock()
+    val queued = concurrentSetOf<Player>()
 
     val players = concurrentHashMapOf<Player, TabPlayer>()
 
