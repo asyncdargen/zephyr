@@ -7,7 +7,6 @@ import dev.zephyr.protocol.world.event.chunk.PlayerChunkUnloadEvent
 import dev.zephyr.util.bukkit.on
 import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.collection.concurrentSetOf
-import org.bukkit.Chunk
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerChangedWorldEvent
 import org.bukkit.event.player.PlayerQuitEvent
@@ -15,59 +14,50 @@ import org.bukkit.event.player.PlayerQuitEvent
 object PlayerChunks {
 
     val PlayersLoadedChunks = concurrentHashMapOf<Player, MutableSet<Position>>()
-    val ChunksLoadedPlayers = concurrentHashMapOf<ChunkPosition, MutableSet<Player>>()
 
     init {
-        on<PlayerQuitEvent> { removeAll(player) }
-        on<PlayerChangedWorldEvent> { removeAll(player) }
+        on<PlayerQuitEvent> { remove(player) }
+        on<PlayerChangedWorldEvent> { clear(player) }
 
         Protocol.onSend(PacketPlayOutType.MAP_CHUNK) {
-            val chunkX = packet.integers.read(0)
-            val chunkZ = packet.integers.read(1)
-
-            val chunk = ChunkPosition(player.world, Position(chunkX, 0, chunkZ))
-            if (!load(player, chunk)) {
-                isCancelled = true
+            packet.integers?.apply {
+                val chunkX = read(0)
+                val chunkZ = read(1)
+                isCancelled = !load(player, Position(chunkX, 0, chunkZ))
             }
         }
-        Protocol.onSend(PacketPlayOutType.UNLOAD_CHUNK) {
-            val chunkX = packet.integers.read(0)
-            val chunkZ = packet.integers.read(1)
 
-            val chunk = ChunkPosition(player.world, Position(chunkX, 0, chunkZ))
-            remove(player, chunk)
+        Protocol.onSend(PacketPlayOutType.UNLOAD_CHUNK) {
+            packet.integers?.apply {
+                val chunkX = read(0)
+                val chunkZ = read(1)
+                remove(player,Position(chunkX, 0, chunkZ))
+            }
         }
     }
 
-    fun load(player: Player, position: ChunkPosition): Boolean {
-        val result = PlayerChunkLoadEvent(player, position).callEvent()
+    fun load(player: Player, position: Position): Boolean {
+        val chunkPosition = ChunkPosition(player.world, position)
+        val result = PlayerChunkLoadEvent(player, chunkPosition).callEvent()
 
         if (result) {
-            PlayersLoadedChunks.getOrPut(player, ::concurrentSetOf).add(position.position)
-            ChunksLoadedPlayers.getOrPut(position, ::concurrentSetOf).add(player)
+            PlayersLoadedChunks.getOrPut(player, ::concurrentSetOf).add(position)
         }
 
         return result
     }
 
-    fun removeAll(player: Player) {
-        ChunksLoadedPlayers.values
-            .forEach { it.remove(player) }
-        PlayersLoadedChunks.remove(player)
-            ?.forEach { PlayerChunkUnloadEvent(player, it.toChunkPosition(player.world)).callEvent() }
-    }
+    fun clear(player: Player) = PlayersLoadedChunks[player]?.clear()
 
-    fun remove(player: Player, position: ChunkPosition) {
-        ChunksLoadedPlayers[position]?.remove(player)
-        if (PlayersLoadedChunks[player]?.remove(position.position) == true) {
-            PlayerChunkUnloadEvent(player, position).callEvent()
+    fun remove(player: Player) = PlayersLoadedChunks.remove(player)
+
+    fun remove(player: Player, position: Position) {
+        if (PlayersLoadedChunks[player]?.remove(position) == true) {
+            val chunkPosition = ChunkPosition(player.world,position)
+            PlayerChunkUnloadEvent(player, chunkPosition).callEvent()
         }
     }
 
     operator fun get(player: Player) = PlayersLoadedChunks[player] ?: emptySet()
-
-    operator fun get(pointer: ChunkPosition) = ChunksLoadedPlayers[pointer.full()] ?: emptySet()
-
-    operator fun get(chunk: Chunk) = get(chunk.chunkPosition)
 
 }

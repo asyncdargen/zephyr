@@ -1,7 +1,6 @@
 package dev.zephyr.protocol.entity
 
 import com.comphenix.protocol.wrappers.EnumWrappers.EntityUseAction
-import dev.zephyr.Zephyr
 import dev.zephyr.protocol.PacketPlayInType
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.entity.event.PlayerFakeEntityInteractEvent
@@ -12,20 +11,19 @@ import dev.zephyr.util.bukkit.on
 import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.time.checkOrSetDelay
 import org.bukkit.Chunk
-import org.bukkit.Location
 import org.bukkit.World
 
 object EntityProtocol {
 
     var AutoRegister = false
 
-    val EntitiesMap: MutableMap<World,MutableMap<Int, ProtocolEntity>> = concurrentHashMapOf()
+    val Entities: MutableMap<World, MutableMap<Int, ProtocolEntity>> = concurrentHashMapOf()
 
     init {
         Protocol.onReceive(PacketPlayInType.USE_ENTITY, async = true) {
             val entityId = packet.integers.read(0)
             val world = player.world
-            val entity = EntitiesMap.getOrPut(world) { concurrentHashMapOf() }[entityId]
+            val entity = Entities.getOrPut(world) { concurrentHashMapOf() }[entityId]
 
             val actionRaw = packet.enumEntityUseActions.read(0)?.action ?: return@onReceive
             val action = when (actionRaw) {
@@ -45,7 +43,7 @@ object EntityProtocol {
         }
 
         everyAsync(2, 2) {
-            EntitiesMap.values.forEach {
+            Entities.values.forEach {
                 it.values.forEach(ProtocolEntity::refreshViewers)
             }
         }
@@ -55,18 +53,16 @@ object EntityProtocol {
 
     operator fun get(chunk: Chunk) = getEntitiesInChunk(chunk)
 
-    operator fun get(world: World) = EntitiesMap[world]
+    operator fun get(world: World) = Entities[world]
 
-    fun isRegistered(world: World, id: Int) = EntitiesMap[world]?.contains(id) ?: false
+    fun isRegistered(world: World, id: Int) = Entities[world]?.contains(id) ?: false
 
     fun isRegistered(entity: ProtocolEntity) = isRegistered(entity.world,entity.entityId)
 
     fun getEntitiesInChunk(world: World, chunkX: Int, chunkZ: Int) =
-        EntitiesMap[world]?.values?.filter { it.location.blockX shr 4 == chunkX && it.location.blockZ shr 4 == chunkZ }
+        Entities[world]?.values?.filter { it.location.blockX shr 4 == chunkX && it.location.blockZ shr 4 == chunkZ }
 
-    fun getEntitiesInWorld(world: World) = EntitiesMap[world]?.values
+    fun getEntitiesInWorld(world: World) = Entities[world]?.values
 
     fun getEntitiesInChunk(chunk: Chunk) = getEntitiesInChunk(chunk.world,chunk.x, chunk.z)
-
-
 }

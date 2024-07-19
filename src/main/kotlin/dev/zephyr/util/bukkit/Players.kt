@@ -42,15 +42,3 @@ fun Player.isChunkLoaded(world: World = this.world, chunkX: Int, chunkZ: Int) =
 
 fun Player.isChunkLoaded(world: World = this.world, chunkSection: BlockPosition) =
     isChunkLoaded(world, chunkSection.x, chunkSection.z)
-
-val ChunkPosition.loadedByPlayers
-    get() = PlayerChunks[this]
-
-val Chunk.loadedByPlayers
-    get() = chunkPosition.loadedByPlayers
-
-fun ChunkPosition.isLoaded(player: Player) = player in loadedByPlayers
-
-fun Chunk.isLoaded(player: Player) = chunkPosition.isLoaded(player)
-
-fun Block.isLoaded(player: Player) = chunkPosition.isLoaded(player)

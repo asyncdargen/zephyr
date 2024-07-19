@@ -24,7 +24,6 @@ import dev.zephyr.protocol.world.PlayerChunks
 import dev.zephyr.protocol.world.position
 import dev.zephyr.util.bukkit.boundingBox
 import dev.zephyr.util.bukkit.clearAngles
-import dev.zephyr.util.bukkit.loadedByPlayers
 import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.collection.ifNotEmpty
@@ -387,7 +386,7 @@ class ProtocolEntity(
     override fun remove() {
         unmount(*mounts.toTypedArray())
         vehicle?.unmount(this)
-        EntityProtocol.EntitiesMap[world]?.remove(entityId)
+        EntityProtocol.Entities[world]?.remove(entityId)
         super.remove()
     }
 
@@ -398,21 +397,21 @@ class ProtocolEntity(
     /*internal bc using register() is better*/
     internal fun registerEntity() {
         if (!isRegistered()) {
-            EntityProtocol.EntitiesMap.getOrPut(world) { concurrentHashMapOf() }[entityId] = this
+            EntityProtocol.Entities.getOrPut(world) { concurrentHashMapOf() }[entityId] = this
         }
 
         spawnLocal()
     }
 
     fun spawnLocal() {
-        if (isRegistered()) chunkPosition.toChunkPosition(world).loadedByPlayers
-            .filter { hasAccess(it) && !isSpawned(it) }
+        if (isRegistered()) world.players
+            .filter { chunkPosition in PlayerChunks[it] && hasAccess(it) && !isSpawned(it) }
             .ifNotEmpty(this::spawn)
     }
 
     fun refreshViewers() {
         viewers
-            .filterNot { hasAccess(it) && chunkPosition in PlayerChunks[it] /*chunkPosition.toChunkPosition(world).loadedByPlayers*/ }
+            .filterNot { hasAccess(it) && chunkPosition in PlayerChunks[it] }
             .ifNotEmpty(this::destroy)
 
         spawnLocal()
