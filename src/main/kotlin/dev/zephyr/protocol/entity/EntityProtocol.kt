@@ -19,15 +19,13 @@ object EntityProtocol {
 
     var AutoRegister = false
 
-    val EntitiesMap: MutableMap<Int, ProtocolEntity> = concurrentHashMapOf()
-    val Entities by EntitiesMap::values
-    val EntitiesSequence
-        get() = Entities.asSequence()
+    val EntitiesMap: MutableMap<World,MutableMap<Int, ProtocolEntity>> = concurrentHashMapOf()
 
     init {
         Protocol.onReceive(PacketPlayInType.USE_ENTITY, async = true) {
             val entityId = packet.integers.read(0)
-            val entity = EntitiesMap[entityId]
+            val world = player.world
+            val entity = EntitiesMap.getOrPut(world) { concurrentHashMapOf() }[entityId]
 
             val actionRaw = packet.enumEntityUseActions.read(0)?.action ?: return@onReceive
             val action = when (actionRaw) {
@@ -39,48 +37,36 @@ object EntityProtocol {
 
             entity ?: return@onReceive
             checkOrSetDelay("${entityId}_${player.name}_click", 20) {
-//                if (!entity.isSpawned(player)) {
-//                    Zephyr.Logger.warning("Player ${player.name} clicked to protocol entity $entityId not spawned for him!")
-//                } else {
-//                    entity.clickHandler(entity, player, action)
-//                }
                 if (entity.isSpawned(player)) entity.clickHandler(entity,player,action)
             }
         }
         on<PlayerChunkUnloadEvent> {
-            getEntitiesInChunk(chunk)
-                .filter { it.isSpawned(player) }
-                .forEach { it.destroy(player) }
+            getEntitiesInChunk(chunk)?.filter { it.isSpawned(player) }?.forEach { it.destroy(player) }
         }
 
         everyAsync(2, 2) {
-            EntitiesSequence.forEach(ProtocolEntity::refreshViewers)
+            EntitiesMap.values.forEach {
+                it.values.forEach(ProtocolEntity::refreshViewers)
+            }
         }
     }
 
-    operator fun contains(id: Int) = isRegistered(id)
-
     operator fun contains(entity: ProtocolEntity) = isRegistered(entity)
-
-    operator fun get(world: World) = getEntitiesInWorld(world)
 
     operator fun get(chunk: Chunk) = getEntitiesInChunk(chunk)
 
-    operator fun get(id: Int) = EntitiesMap[id]
+    operator fun get(world: World) = EntitiesMap[world]
 
-    fun isRegistered(id: Int) = id in EntitiesMap
+    fun isRegistered(world: World, id: Int) = EntitiesMap[world]?.contains(id) ?: false
 
-    fun isRegistered(entity: ProtocolEntity) = isRegistered(entity.entityId)
+    fun isRegistered(entity: ProtocolEntity) = isRegistered(entity.world,entity.entityId)
 
-    fun getInRange(location: Location, distance: Double) =
-        get(location.world).filter { it.location.distance(location) <= distance }
+    fun getEntitiesInChunk(world: World, chunkX: Int, chunkZ: Int) =
+        EntitiesMap[world]?.values?.filter { it.location.blockX shr 4 == chunkX && it.location.blockZ shr 4 == chunkZ }
 
-    fun getEntitiesInChunk(chunkX: Int, chunkZ: Int) =
-        EntitiesSequence.filter { it.location.blockX shr 4 == chunkX && it.location.blockZ shr 4 == chunkZ }
+    fun getEntitiesInWorld(world: World) = EntitiesMap[world]?.values
 
-    fun getEntitiesInWorld(world: World) = EntitiesSequence.filter { it.world === world }
-
-    fun getEntitiesInChunk(chunk: Chunk) = getEntitiesInChunk(chunk.x, chunk.z)
+    fun getEntitiesInChunk(chunk: Chunk) = getEntitiesInChunk(chunk.world,chunk.x, chunk.z)
 
 
 }
