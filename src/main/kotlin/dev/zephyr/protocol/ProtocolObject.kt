@@ -25,12 +25,31 @@ abstract class ProtocolObject {
     var destroyHandler: ProtocolObject.(Player) -> Unit = { }
 
     val viewers: MutableCollection<Player> = concurrentSetOf()
+    val loaders: MutableCollection<Player> = concurrentSetOf()
 
     val hasViewers get() = viewers.isNotEmpty()
 
     fun isSpawned(player: Player) = player in viewers
+    fun isLoaded(player: Player) = player in loaders
 
     fun broadcastSpawn() = spawn(players())
+
+    @Synchronized
+    fun load(players: Collection<Player>) {
+        loaders.addAll(players)
+    }
+
+    fun load(vararg players: Player) =
+        load(players.toList())
+
+    @Synchronized
+    fun unload(players: Collection<Player>) {
+        destroy(players)
+        loaders.removeAll(players)
+    }
+
+    fun unload(vararg players: Player) =
+        unload(players.toList())
 
     @Synchronized
     fun spawn(players: Collection<Player>) {
@@ -77,7 +96,7 @@ abstract class ProtocolObject {
     @Synchronized
     fun remove() {
         handleRemove()
-        destroy(viewers)
+        destroy(loaders)
 
         if (hasEventContext) {
             eventContext.close()

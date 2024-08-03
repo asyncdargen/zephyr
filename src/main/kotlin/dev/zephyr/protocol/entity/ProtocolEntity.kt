@@ -405,13 +405,13 @@ class ProtocolEntity(
 
     fun spawnLocal() {
         if (isRegistered()) world.players
-            .filter { chunkPosition in PlayerChunks[it] && hasAccess(it) && !isSpawned(it) }
+            .filter { isLoaded(it) && !isSpawned(it) && hasAccess(it) }
             .ifNotEmpty(this::spawn)
     }
 
     fun refreshViewers() {
         viewers
-            .filterNot { hasAccess(it) && chunkPosition in PlayerChunks[it] }
+            .filterNot { isLoaded(it) && hasAccess(it) }
             .ifNotEmpty(this::destroy)
 
         spawnLocal()

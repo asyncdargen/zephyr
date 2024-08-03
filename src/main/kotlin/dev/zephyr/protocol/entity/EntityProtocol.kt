@@ -5,6 +5,7 @@ import dev.zephyr.protocol.PacketPlayInType
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.entity.event.PlayerFakeEntityInteractEvent
 import dev.zephyr.protocol.entity.type.EntityInteract
+import dev.zephyr.protocol.world.event.chunk.PlayerChunkLoadEvent
 import dev.zephyr.protocol.world.event.chunk.PlayerChunkUnloadEvent
 import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.util.bukkit.on
@@ -38,8 +39,13 @@ object EntityProtocol {
                 if (entity.isSpawned(player)) entity.clickHandler(entity,player,action)
             }
         }
+
+        on<PlayerChunkLoadEvent> {
+            getEntitiesInChunk(chunk)?.forEach { it.load(player) }
+        }
+
         on<PlayerChunkUnloadEvent> {
-            getEntitiesInChunk(chunk)?.filter { it.isSpawned(player) }?.forEach { it.destroy(player) }
+            getEntitiesInChunk(chunk)?.forEach { it.unload(player) }
         }
 
         everyAsync(2, 2) {

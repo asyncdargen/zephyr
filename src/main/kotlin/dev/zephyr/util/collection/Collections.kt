@@ -27,7 +27,7 @@ inline fun <K, reified R> Map<K, *>.filterValuesIsInstance() =
 
 fun <C : Collection<*>> C.takeIfNotEmpty() = takeIf(Collection<*>::isNotEmpty)
 
-inline fun <C : Collection<*>, T> C.ifNotEmpty(block: (C) -> T) = block(this)
+inline fun <C : Collection<*>, T> C.ifNotEmpty(block: (C) -> T) = if (isNotEmpty()) block(this) else null
 
 fun <V> Iterable<V>.repeat(times: Int) = buildList { repeat(times) no@{ addAll(this@repeat) } }
 
