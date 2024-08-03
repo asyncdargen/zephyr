@@ -399,35 +399,40 @@ class ProtocolEntity(
         if (!isRegistered()) {
             EntityProtocol.Entities.getOrPut(world) { concurrentHashMapOf() }[entityId] = this
         }
-
-        spawnLocal()
+        PlayerChunks.PlayersLoadedChunks
+            .asSequence()
+            .filter { chunkPosition in it.value && !isSpawned(it.key) && !isLoaded(it.key) && hasAccess(it.key) }
+            .forEach { (player, _) ->
+                load(player)
+                spawn(player)
+            }
     }
 
-    fun spawnLocal() {
-        if (isRegistered()) world.players
-            .filter { isLoaded(it) && !isSpawned(it) && hasAccess(it) }
-            .ifNotEmpty(this::spawn)
-    }
+fun spawnLocal() {
+    if (isRegistered()) world.players
+        .filter { isLoaded(it) && !isSpawned(it) && hasAccess(it) }
+        .ifNotEmpty(this::spawn)
+}
 
-    fun refreshViewers() {
-        viewers
-            .filterNot { isLoaded(it) && hasAccess(it) }
-            .ifNotEmpty(this::destroy)
+fun refreshViewers() {
+    viewers
+        .filterNot { isLoaded(it) && hasAccess(it) }
+        .ifNotEmpty(this::destroy)
 
-        spawnLocal()
-    }
+    spawnLocal()
+}
 
-    fun hasAccess(player: Player) = accessor(player)
+fun hasAccess(player: Player) = accessor(player)
 
-    fun isRegistered() = this in EntityProtocol
+fun isRegistered() = this in EntityProtocol
 
-    companion object {
+companion object {
 
-        private val IdField = AtomicInteger(Int.MAX_VALUE)
+    private val IdField = AtomicInteger(Int.MAX_VALUE)
 
-        fun nextEntityId() = IdField.decrementAndGet()
+    fun nextEntityId() = IdField.decrementAndGet()
 
-    }
+}
 
 }
 
