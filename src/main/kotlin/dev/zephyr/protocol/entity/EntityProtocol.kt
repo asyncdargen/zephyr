@@ -13,6 +13,7 @@ import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.time.checkOrSetDelay
 import org.bukkit.Chunk
 import org.bukkit.World
+import org.bukkit.event.player.PlayerChangedWorldEvent
 
 object EntityProtocol {
 
@@ -46,6 +47,10 @@ object EntityProtocol {
 
         on<PlayerChunkUnloadEvent> {
             getEntitiesInChunk(chunk)?.forEach { it.unload(player) }
+        }
+
+        on<PlayerChangedWorldEvent> {
+            getEntitiesInWorld(from)?.forEach { it.unload(player) }
         }
 
         everyAsync(2, 2) {
