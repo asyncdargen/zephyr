@@ -394,7 +394,6 @@ class ProtocolEntity(
         ctx.filter<PlayerFakeEntityInteractEvent> { it.entity === this }
     }
 
-    /*internal bc using register() is better*/
     internal fun registerEntity() {
         if (!isRegistered()) {
             EntityProtocol.Entities.getOrPut(world) { concurrentHashMapOf() }[entityId] = this
