@@ -408,31 +408,31 @@ class ProtocolEntity(
             }
     }
 
-fun spawnLocal() {
-    if (isRegistered()) world.players
-        .filter { isLoaded(it) && !isSpawned(it) && hasAccess(it) }
-        .ifNotEmpty(this::spawn)
-}
+    fun spawnLocal() {
+        if (isRegistered()) world.players
+            .filter { isLoaded(it) && !isSpawned(it) && hasAccess(it) }
+            .ifNotEmpty(this::spawn)
+    }
 
-fun refreshViewers() {
-    viewers
-        .filterNot { isLoaded(it) && hasAccess(it) }
-        .ifNotEmpty(this::destroy)
+    fun refreshViewers() {
+        viewers
+            .filterNot { isLoaded(it) && hasAccess(it) }
+            .ifNotEmpty(this::destroy)
 
-    spawnLocal()
-}
+        spawnLocal()
+    }
 
-fun hasAccess(player: Player) = accessor(player)
+    fun hasAccess(player: Player) = accessor(player)
 
-fun isRegistered() = this in EntityProtocol
+    fun isRegistered() = this in EntityProtocol
 
-companion object {
+    companion object {
 
-    private val IdField = AtomicInteger(Int.MAX_VALUE)
+        private val IdField = AtomicInteger(Int.MAX_VALUE)
 
-    fun nextEntityId() = IdField.decrementAndGet()
+        fun nextEntityId() = IdField.decrementAndGet()
 
-}
+    }
 
 }
 
