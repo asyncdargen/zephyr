@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'dev.zephyr'
-version = '1.1.7'
+version = '1.0.96'
 
 repositories {
     mavenCentral()
@@ -49,3 +49,25 @@ compileKotlin.kotlinOptions {
 }
 
 tasks.withType(JavaCompile)*.options*.encoding = 'UTF-8'
+
+publishing {
+    repositories {
+        maven {
+            url 'https://repo.starfarm.fun/repository/maven-public-releases'
+            credentials {
+                username System.getenv('SF_REPO_USER')
+                password System.getenv('SF_REPO_PASSWORD')
+            }
+        }
+    }
+
+    publications {
+        maven(MavenPublication) {
+            groupId group
+            artifactId project.name
+            version version
+            from components.java
+        }
+    }
+}
+
