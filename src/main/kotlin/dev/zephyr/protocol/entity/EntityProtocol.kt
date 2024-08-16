@@ -18,8 +18,6 @@ import org.bukkit.event.player.PlayerChangedWorldEvent
 
 object EntityProtocol {
 
-    var AutoRegister = false
-
     val Entities: MutableMap<Int, ProtocolEntity> = concurrentHashMapOf()
     val EntitiesByPositions: MutableMap<World, MutableMap<ChunkPosition,MutableMap<Int, ProtocolEntity>>> = concurrentHashMapOf()
 
