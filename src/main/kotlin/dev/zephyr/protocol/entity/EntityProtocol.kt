@@ -11,6 +11,7 @@ import dev.zephyr.protocol.world.event.chunk.PlayerChunkUnloadEvent
 import dev.zephyr.util.bukkit.everyAsync
 import dev.zephyr.util.bukkit.on
 import dev.zephyr.util.collection.concurrentHashMapOf
+import dev.zephyr.util.kotlin.print
 import dev.zephyr.util.time.checkOrSetDelay
 import org.bukkit.Chunk
 import org.bukkit.World
@@ -51,7 +52,7 @@ object EntityProtocol {
             getEntitiesInWorld(from)?.forEach { it.unload(player) }
         }
 
-        everyAsync(2, 2) {
+        everyAsync(0, 1) {
             Entities.values.forEach {
                 updatePosition(it)
                 it.refreshViewers()
@@ -81,12 +82,10 @@ object EntityProtocol {
             val oldWorld = entity.latestWorldSnapshot
             val newWorld = entity.world
             val oldChunk = entity.latestChunkSnapshot
-            val newChunk = entity.location.position.chunkSection
+            val newChunk = entity.location.position.chunk
             EntitiesByPositions[oldWorld]?.get(oldChunk)?.remove(entityId)
             EntitiesByPositions.getOrPut(newWorld) { concurrentHashMapOf() }
                 .getOrPut(newChunk) { concurrentHashMapOf() }[entityId] = entity
-            entity.latestChunkSnapshot = newChunk
-            entity.latestWorldSnapshot = newWorld
             entity.chunkIsDirty = false
             entity.worldIsDirty = false
             entity.refreshLoaders()

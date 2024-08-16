@@ -18,6 +18,10 @@ inline fun unit(block: () -> Unit) {
     block.invoke()
 }
 
+fun <T> T.print(addition: String? = null): T {
+    return apply { if (addition !== null) println("$addition: $this") else println(this) }
+}
+
 inline fun Any?.unit(block: () -> Unit) {
     block.invoke()
 }

@@ -34,6 +34,7 @@ import dev.zephyr.util.component.wrap
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.cast
 import dev.zephyr.util.kotlin.observable
+import dev.zephyr.util.kotlin.print
 import net.kyori.adventure.text.Component
 import org.bukkit.ChatColor
 import org.bukkit.Location
@@ -113,20 +114,21 @@ class ProtocolEntity(
     var latestWorldSnapshot = location.world
 
     var chunkIsDirty = false
-    var latestChunkSnapshot = location.position.chunkSection
+    var latestChunkSnapshot = location.position.chunk
 
     var location by observable(location) { old, new ->
         if (!worldIsDirty) {
             worldIsDirty = latestWorldSnapshot != new.world
+            latestWorldSnapshot = new.world
         }
         if (!chunkIsDirty && !worldIsDirty) {
-            chunkIsDirty = latestChunkSnapshot != new.position.chunkSection
+            chunkIsDirty = latestChunkSnapshot != new.position.chunk
+            latestChunkSnapshot = new.position.chunk
         }
         spawnLocal()
     }
 
     val chunkPosition get() = location.position.chunk
-    val chunkSectionPosition get() = location.position.chunkSection
 
     val chunk get() = location.chunk
     val world get() = location.world
@@ -400,6 +402,7 @@ class ProtocolEntity(
         unmount(*mounts.toTypedArray())
         vehicle?.unmount(this)
         EntityProtocol.Entities.remove(entityId)
+        EntityProtocol.EntitiesByPositions[world]?.get(latestChunkSnapshot)?.remove(entityId)
         super.remove()
     }
 
@@ -412,13 +415,13 @@ class ProtocolEntity(
             EntityProtocol.Entities[entityId] = this
             EntityProtocol.EntitiesByPositions.getOrPut(world) {
                 concurrentHashMapOf()
-            }.getOrPut(location.position.chunkSection) {
+            }.getOrPut(location.position.chunk) {
                 concurrentHashMapOf()
             }[entityId] = this
         }
         PlayerChunks.PlayersLoadedChunks
             .asSequence()
-            .filter { chunkSectionPosition in it.value && !isSpawned(it.key) && !isLoaded(it.key) && hasAccess(it.key) }
+            .filter { location.position.chunk in it.value && !isSpawned(it.key) && !isLoaded(it.key) && hasAccess(it.key) }
             .forEach { (player, _) ->
                 load(player)
                 spawn(player)
@@ -440,10 +443,10 @@ class ProtocolEntity(
     }
 
     fun refreshLoaders() {
-        loaders
-            .filter { isLoaded(it) && latestChunkSnapshot !in PlayerChunks[it] }
+        world.players.filter { isLoaded(it) && latestChunkSnapshot !in PlayerChunks[it] }
             .ifNotEmpty(this::unload)
-        refreshViewers()
+        world.players.filter { !isLoaded(it) && latestChunkSnapshot in PlayerChunks[it] }
+            .ifNotEmpty(this::load)
     }
 
     fun hasAccess(player: Player) = accessor(player)
