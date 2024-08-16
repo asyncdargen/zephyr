@@ -81,13 +81,13 @@ class TabPlayer(val player: Player) {
     fun tagStringLines(vararg lines: String) {
         tagName = components(*lines)
     }
-    // flip isTracked conversion
+
     fun update(force: Boolean = false) {
         if (!container.tag.isRegistered()) with(container.tag) {
             access {
                 (tagSelfAccess || player !== it) && player.isTracked(it)
                         && tagAccessor(player, it) && it.canSee(player) && !player.isDead
-                        && (player.gameMode == GameMode.SPECTATOR && player.gameMode == it.gameMode || player.gameMode != GameMode.SPECTATOR)
+                        && (player.gameMode === GameMode.SPECTATOR && player.gameMode === it.gameMode || player.gameMode !== GameMode.SPECTATOR)
             }
             register()
             player.mount(this)

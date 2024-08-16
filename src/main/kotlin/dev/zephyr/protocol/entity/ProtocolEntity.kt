@@ -20,8 +20,7 @@ import dev.zephyr.protocol.scoreboard.ProtocolScoreboardTeam
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamAction
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamCollision
 import dev.zephyr.protocol.scoreboard.type.ScoreboardTeamTagVisibility
-import dev.zephyr.protocol.world.PlayerChunks
-import dev.zephyr.protocol.world.position
+import dev.zephyr.protocol.world.*
 import dev.zephyr.util.bukkit.boundingBox
 import dev.zephyr.util.bukkit.clearAngles
 import dev.zephyr.util.collection.concurrentHashMapOf
@@ -110,10 +109,24 @@ class ProtocolEntity(
     val boundingBox = type.boundingBox
     val positionBox get() = boundingBox.clone().shift(location)
 
-    var location by observable(location) { _, _ -> spawnLocal() }
+    var worldIsDirty = false
+    var latestWorldSnapshot = location.world
+
+    var chunkIsDirty = false
+    var latestChunkSnapshot = location.chunkSectionPosition
+
+    var location by observable(location) { old, new ->
+        if (!worldIsDirty) {
+            worldIsDirty = latestWorldSnapshot != new.world
+        }
+        if (!chunkIsDirty && !worldIsDirty) {
+            chunkIsDirty = latestChunkSnapshot != new.chunkSectionPosition
+        }
+        spawnLocal()
+    }
 
     val chunkPosition get() = location.position.chunk
-    val chunkSectionPosition get() = location.position.chunkSection
+    val chunkSectionPosition get() = location.chunkSectionPosition
 
     val chunk get() = location.chunk
     val world get() = location.world
@@ -386,7 +399,7 @@ class ProtocolEntity(
     override fun remove() {
         unmount(*mounts.toTypedArray())
         vehicle?.unmount(this)
-        EntityProtocol.Entities[world]?.remove(entityId)
+        EntityProtocol.Entities.remove(entityId)
         super.remove()
     }
 
@@ -396,11 +409,16 @@ class ProtocolEntity(
 
     internal fun registerEntity() {
         if (!isRegistered()) {
-            EntityProtocol.Entities.getOrPut(world) { concurrentHashMapOf() }[entityId] = this
+            EntityProtocol.Entities[entityId] = this
+            EntityProtocol.EntitiesByPositions.getOrPut(world) {
+                concurrentHashMapOf()
+            }.getOrPut(location.chunkSectionPosition) {
+                concurrentHashMapOf()
+            }[entityId] = this
         }
         PlayerChunks.PlayersLoadedChunks
             .asSequence()
-            .filter { chunkPosition in it.value && !isSpawned(it.key) && !isLoaded(it.key) && hasAccess(it.key) }
+            .filter { chunkSectionPosition in it.value && !isSpawned(it.key) && !isLoaded(it.key) && hasAccess(it.key) }
             .forEach { (player, _) ->
                 load(player)
                 spawn(player)
@@ -415,10 +433,17 @@ class ProtocolEntity(
 
     fun refreshViewers() {
         viewers
-            .filterNot { isLoaded(it) && hasAccess(it) }
+            .filter { !isLoaded(it) || !hasAccess(it) }
             .ifNotEmpty(this::destroy)
 
         spawnLocal()
+    }
+
+    fun refreshLoaders() {
+        loaders
+            .filter { isLoaded(it) && latestChunkSnapshot !in PlayerChunks[it] }
+            .ifNotEmpty(this::unload)
+        refreshViewers()
     }
 
     fun hasAccess(player: Player) = accessor(player)

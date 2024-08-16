@@ -5,6 +5,7 @@ import dev.zephyr.protocol.PacketPlayInType
 import dev.zephyr.protocol.Protocol
 import dev.zephyr.protocol.entity.event.PlayerFakeEntityInteractEvent
 import dev.zephyr.protocol.entity.type.EntityInteract
+import dev.zephyr.protocol.world.*
 import dev.zephyr.protocol.world.event.chunk.PlayerChunkLoadEvent
 import dev.zephyr.protocol.world.event.chunk.PlayerChunkUnloadEvent
 import dev.zephyr.util.bukkit.everyAsync
@@ -19,14 +20,13 @@ object EntityProtocol {
 
     var AutoRegister = false
 
-    val Entities: MutableMap<World, MutableMap<Int, ProtocolEntity>> = concurrentHashMapOf()
+    val Entities: MutableMap<Int, ProtocolEntity> = concurrentHashMapOf()
+    val EntitiesByPositions: MutableMap<World, MutableMap<ChunkPosition,MutableMap<Int, ProtocolEntity>>> = concurrentHashMapOf()
 
     init {
         Protocol.onReceive(PacketPlayInType.USE_ENTITY, async = true) {
             val entityId = packet.integers.read(0)
-            val world = player.world
-            val entity = Entities.getOrPut(world) { concurrentHashMapOf() }[entityId]
-
+            val entity = Entities[entityId]
             val actionRaw = packet.enumEntityUseActions.read(0)?.action ?: return@onReceive
             val action = when (actionRaw) {
                 EntityUseAction.ATTACK -> EntityInteract.ATTACK
@@ -55,7 +55,8 @@ object EntityProtocol {
 
         everyAsync(2, 2) {
             Entities.values.forEach {
-                it.values.forEach(ProtocolEntity::refreshViewers)
+                updatePosition(it)
+                it.refreshViewers()
             }
         }
     }
@@ -64,16 +65,33 @@ object EntityProtocol {
 
     operator fun get(chunk: Chunk) = getEntitiesInChunk(chunk)
 
-    operator fun get(world: World) = Entities[world]
+    operator fun get(world: World) = EntitiesByPositions[world]
 
-    fun isRegistered(world: World, id: Int) = Entities[world]?.contains(id) ?: false
+    fun isRegistered(id: Int) = Entities.containsKey(id)
 
-    fun isRegistered(entity: ProtocolEntity) = isRegistered(entity.world,entity.entityId)
+    fun isRegistered(entity: ProtocolEntity) = isRegistered(entity.entityId)
 
-    fun getEntitiesInChunk(world: World, chunkX: Int, chunkZ: Int) =
-        Entities[world]?.values?.filter { it.location.blockX shr 4 == chunkX && it.location.blockZ shr 4 == chunkZ }
+    fun getEntitiesInChunk(world: World, position: ChunkPosition) = EntitiesByPositions[world]?.get(position)?.values
 
-    fun getEntitiesInWorld(world: World) = Entities[world]?.values
+    fun getEntitiesInWorld(world: World) = EntitiesByPositions[world]?.values?.flatMap { it.values }
 
-    fun getEntitiesInChunk(chunk: Chunk) = getEntitiesInChunk(chunk.world,chunk.x, chunk.z)
+    fun getEntitiesInChunk(chunk: Chunk) = getEntitiesInChunk(chunk.world,chunk.chunkPosition)
+
+    fun updatePosition(entity: ProtocolEntity) {
+        val entityId = entity.entityId
+        if (entity.worldIsDirty || entity.chunkIsDirty) {
+            val oldWorld = entity.latestWorldSnapshot
+            val newWorld = entity.world
+            val oldChunk = entity.latestChunkSnapshot
+            val newChunk = entity.location.chunkSectionPosition
+            EntitiesByPositions[oldWorld]?.get(oldChunk)?.remove(entityId)
+            EntitiesByPositions.getOrPut(newWorld) { concurrentHashMapOf() }
+                .getOrPut(newChunk) { concurrentHashMapOf() }[entityId] = entity
+            entity.latestChunkSnapshot = newChunk
+            entity.latestWorldSnapshot = newWorld
+            entity.chunkIsDirty = false
+            entity.worldIsDirty = false
+            entity.refreshLoaders()
+        }
+    }
 }
