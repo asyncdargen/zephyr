@@ -113,20 +113,20 @@ class ProtocolEntity(
     var latestWorldSnapshot = location.world
 
     var chunkIsDirty = false
-    var latestChunkSnapshot = location.chunkSectionPosition
+    var latestChunkSnapshot = location.position.chunkSection
 
     var location by observable(location) { old, new ->
         if (!worldIsDirty) {
             worldIsDirty = latestWorldSnapshot != new.world
         }
         if (!chunkIsDirty && !worldIsDirty) {
-            chunkIsDirty = latestChunkSnapshot != new.chunkSectionPosition
+            chunkIsDirty = latestChunkSnapshot != new.position.chunkSection
         }
         spawnLocal()
     }
 
     val chunkPosition get() = location.position.chunk
-    val chunkSectionPosition get() = location.chunkSectionPosition
+    val chunkSectionPosition get() = location.position.chunkSection
 
     val chunk get() = location.chunk
     val world get() = location.world
@@ -412,7 +412,7 @@ class ProtocolEntity(
             EntityProtocol.Entities[entityId] = this
             EntityProtocol.EntitiesByPositions.getOrPut(world) {
                 concurrentHashMapOf()
-            }.getOrPut(location.chunkSectionPosition) {
+            }.getOrPut(location.position.chunkSection) {
                 concurrentHashMapOf()
             }[entityId] = this
         }

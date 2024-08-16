@@ -19,7 +19,7 @@ import org.bukkit.event.player.PlayerChangedWorldEvent
 object EntityProtocol {
 
     val Entities: MutableMap<Int, ProtocolEntity> = concurrentHashMapOf()
-    val EntitiesByPositions: MutableMap<World, MutableMap<ChunkPosition,MutableMap<Int, ProtocolEntity>>> = concurrentHashMapOf()
+    val EntitiesByPositions: MutableMap<World, MutableMap<Position,MutableMap<Int, ProtocolEntity>>> = concurrentHashMapOf()
 
     init {
         Protocol.onReceive(PacketPlayInType.USE_ENTITY, async = true) {
@@ -69,11 +69,11 @@ object EntityProtocol {
 
     fun isRegistered(entity: ProtocolEntity) = isRegistered(entity.entityId)
 
-    fun getEntitiesInChunk(world: World, position: ChunkPosition) = EntitiesByPositions[world]?.get(position)?.values
+    fun getEntitiesInChunk(world: World, position: Position) = EntitiesByPositions[world]?.get(position)?.values
 
     fun getEntitiesInWorld(world: World) = EntitiesByPositions[world]?.values?.flatMap { it.values }
 
-    fun getEntitiesInChunk(chunk: Chunk) = getEntitiesInChunk(chunk.world,chunk.chunkPosition)
+    fun getEntitiesInChunk(chunk: Chunk) = getEntitiesInChunk(chunk.world,chunk.position)
 
     fun updatePosition(entity: ProtocolEntity) {
         val entityId = entity.entityId
@@ -81,7 +81,7 @@ object EntityProtocol {
             val oldWorld = entity.latestWorldSnapshot
             val newWorld = entity.world
             val oldChunk = entity.latestChunkSnapshot
-            val newChunk = entity.location.chunkSectionPosition
+            val newChunk = entity.location.position.chunkSection
             EntitiesByPositions[oldWorld]?.get(oldChunk)?.remove(entityId)
             EntitiesByPositions.getOrPut(newWorld) { concurrentHashMapOf() }
                 .getOrPut(newChunk) { concurrentHashMapOf() }[entityId] = entity

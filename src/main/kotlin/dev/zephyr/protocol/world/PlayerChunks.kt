@@ -13,7 +13,7 @@ import org.bukkit.event.player.PlayerQuitEvent
 
 object PlayerChunks {
 
-    val PlayersLoadedChunks = concurrentHashMapOf<Player, MutableSet<ChunkPosition>>()
+    val PlayersLoadedChunks = concurrentHashMapOf<Player, MutableSet<Position>>()
 
     init {
         on<PlayerQuitEvent> { remove(player) }
@@ -41,7 +41,7 @@ object PlayerChunks {
         val result = PlayerChunkLoadEvent(player, chunkPosition).callEvent()
 
         if (result) {
-            PlayersLoadedChunks.getOrPut(player, ::concurrentSetOf).add(chunkPosition)
+            PlayersLoadedChunks.getOrPut(player, ::concurrentSetOf).add(position)
         }
 
         return result
@@ -53,7 +53,7 @@ object PlayerChunks {
 
     fun remove(player: Player, position: Position) {
         val chunkPosition = ChunkPosition(player.world,position)
-        if (PlayersLoadedChunks[player]?.remove(chunkPosition) == true) {
+        if (PlayersLoadedChunks[player]?.remove(position) == true) {
             PlayerChunkUnloadEvent(player, chunkPosition).callEvent()
         }
     }
