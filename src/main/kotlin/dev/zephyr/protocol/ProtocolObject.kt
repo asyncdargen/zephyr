@@ -44,7 +44,6 @@ abstract class ProtocolObject {
 
     @Synchronized
     fun unload(players: Collection<Player>) {
-        destroy(players)
         loaders.removeAll(players)
     }
 

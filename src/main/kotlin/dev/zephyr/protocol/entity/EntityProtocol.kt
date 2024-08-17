@@ -45,11 +45,17 @@ object EntityProtocol {
         }
 
         on<PlayerChunkUnloadEvent> {
-            getEntitiesInChunk(chunk)?.forEach { it.unload(player) }
+            getEntitiesInChunk(chunk)?.forEach {
+                it.unload(player)
+                it.destroy(player)
+            }
         }
 
         on<PlayerChangedWorldEvent> {
-            getEntitiesInWorld(from)?.forEach { it.unload(player) }
+            getEntitiesInWorld(from)?.forEach {
+                it.unload(player)
+                it.destroy(player)
+            }
         }
 
         everyAsync(0, 1) {

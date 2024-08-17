@@ -446,7 +446,10 @@ class ProtocolEntity(
         world.players.filter { isLoaded(it) && latestChunkSnapshot !in PlayerChunks[it] }
             .ifNotEmpty(this::unload)
         world.players.filter { !isLoaded(it) && latestChunkSnapshot in PlayerChunks[it] }
-            .ifNotEmpty(this::load)
+            .ifNotEmpty {
+                load(it)
+                spawn(it)
+            }
     }
 
     fun hasAccess(player: Player) = accessor(player)
