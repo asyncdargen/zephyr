@@ -94,6 +94,8 @@ object EntityProtocol {
                 .getOrPut(newChunk) { concurrentHashMapOf() }[entityId] = entity
             entity.chunkIsDirty = false
             entity.worldIsDirty = false
+            entity.latestWorldSnapshot = newWorld
+            entity.latestChunkSnapshot = newChunk
             entity.refreshLoaders()
         }
     }

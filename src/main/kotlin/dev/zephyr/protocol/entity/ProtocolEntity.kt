@@ -119,11 +119,9 @@ class ProtocolEntity(
     var location by observable(location) { old, new ->
         if (!worldIsDirty) {
             worldIsDirty = latestWorldSnapshot != new.world
-            latestWorldSnapshot = new.world
         }
         if (!chunkIsDirty && !worldIsDirty) {
             chunkIsDirty = latestChunkSnapshot != new.position.chunk
-            latestChunkSnapshot = new.position.chunk
         }
         spawnLocal()
     }
@@ -443,13 +441,9 @@ class ProtocolEntity(
     }
 
     fun refreshLoaders() {
-        world.players.filter { isLoaded(it) && latestChunkSnapshot !in PlayerChunks[it] }
-            .ifNotEmpty(this::unload)
-        world.players.filter { !isLoaded(it) && latestChunkSnapshot in PlayerChunks[it] }
-            .ifNotEmpty {
-                load(it)
-                spawn(it)
-            }
+        val chunk = latestChunkSnapshot
+        loaders.filter { chunk !in PlayerChunks[it] }.ifNotEmpty(this::unload)
+        world.players.filter { !isLoaded(it) && chunk in PlayerChunks[it] }.ifNotEmpty(this::load)
     }
 
     fun hasAccess(player: Player) = accessor(player)

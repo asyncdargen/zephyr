@@ -7,6 +7,7 @@ import dev.zephyr.protocol.world.event.chunk.PlayerChunkUnloadEvent
 import dev.zephyr.util.bukkit.on
 import dev.zephyr.util.collection.concurrentHashMapOf
 import dev.zephyr.util.collection.concurrentSetOf
+import dev.zephyr.util.kotlin.print
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerChangedWorldEvent
 import org.bukkit.event.player.PlayerQuitEvent
@@ -16,7 +17,7 @@ object PlayerChunks {
     val PlayersLoadedChunks = concurrentHashMapOf<Player, MutableSet<Position>>()
 
     init {
-        on<PlayerQuitEvent> { remove(player) }
+        on<PlayerQuitEvent> { unload(player) }
         on<PlayerChangedWorldEvent> { clear(player) }
 
         Protocol.onSend(PacketPlayOutType.MAP_CHUNK) {
@@ -31,7 +32,7 @@ object PlayerChunks {
             packet.integers?.apply {
                 val chunkX = read(0)
                 val chunkZ = read(1)
-                remove(player,Position(chunkX, 0, chunkZ))
+                unload(player,Position(chunkX, 0, chunkZ))
             }
         }
     }
@@ -47,16 +48,16 @@ object PlayerChunks {
         return result
     }
 
-    fun clear(player: Player) = PlayersLoadedChunks[player]?.clear()
-
-    fun remove(player: Player) = PlayersLoadedChunks.remove(player)
-
-    fun remove(player: Player, position: Position) {
+    fun unload(player: Player, position: Position) {
         val chunkPosition = ChunkPosition(player.world,position)
         if (PlayersLoadedChunks[player]?.remove(position) == true) {
             PlayerChunkUnloadEvent(player, chunkPosition).callEvent()
         }
     }
+
+    fun unload(player: Player) = PlayersLoadedChunks.remove(player)
+
+    fun clear(player: Player) = PlayersLoadedChunks[player]?.clear()
 
     operator fun get(player: Player) = PlayersLoadedChunks[player] ?: emptySet()
 
