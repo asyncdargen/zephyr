@@ -419,8 +419,13 @@ class ProtocolEntity(
         }
         PlayerChunks.PlayersLoadedChunks
             .asSequence()
-            .filter { location.position.chunk in it.value && !isSpawned(it.key) && !isLoaded(it.key) && hasAccess(it.key) }
-            .forEach { (player, _) ->
+            .filter {
+                location.world == it.key.world
+                        && location.position.chunk in it.value
+                        && !isSpawned(it.key)
+                        && !isLoaded(it.key)
+                        && hasAccess(it.key)
+            }.forEach { (player, _) ->
                 load(player)
                 spawn(player)
             }
