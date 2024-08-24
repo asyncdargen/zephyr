@@ -432,8 +432,8 @@ class ProtocolEntity(
     }
 
     fun spawnLocal() {
-        if (isRegistered()) world.players
-            .filter { isLoaded(it) && !isSpawned(it) && hasAccess(it) }
+        if (isRegistered()) loaders
+            .filter { !isSpawned(it) && hasAccess(it) }
             .ifNotEmpty(this::spawn)
     }
 
