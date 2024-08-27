@@ -5,14 +5,17 @@ import dev.zephyr.protocol.entity.ProtocolVehicle
 import dev.zephyr.protocol.packet.entity.PacketEntityMount
 import dev.zephyr.util.bukkit.clearAngles
 import dev.zephyr.util.bukkit.diff
+import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.kotlin.KotlinOpens
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 
 @KotlinOpens
 class ProtocolPlayerVehicle(val player: Player) : ProtocolVehicle {
 
-    override val mounts = mutableSetOf<ProtocolEntity>()
+    override val mounts = concurrentSetOf<ProtocolEntity>()
 
     override fun sendMounts(players: Collection<Player>) = PacketEntityMount().also {
         it.entityId = player.entityId

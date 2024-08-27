@@ -45,6 +45,7 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
 import java.util.*
 import java.util.Optional.ofNullable
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.jvm.optionals.getOrNull
 
@@ -72,7 +73,7 @@ class ProtocolEntity(
 
     val effects =
         concurrentSetOf<ProtocolEntityEffect>().observe({ it.add(entityId, viewers) }, { it.remove(entityId, viewers) })
-    override val mounts = mutableSetOf<ProtocolEntity>()
+    override val mounts = concurrentSetOf<ProtocolEntity>()
     var vehicle: ProtocolVehicle? = null
 
     val metadata = ObservableMetadata.create(this)

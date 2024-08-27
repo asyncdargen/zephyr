@@ -45,7 +45,7 @@ abstract class ProtocolObject {
 
     @Synchronized
     fun unload(players: Collection<Player>) {
-        loaders.removeAll(players)
+        loaders.removeAll(players.toSet())
     }
 
     fun unload(vararg players: Player) =
