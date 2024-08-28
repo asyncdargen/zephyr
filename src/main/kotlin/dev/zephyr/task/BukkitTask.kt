@@ -1,7 +1,6 @@
 package dev.zephyr.task
 
 import dev.zephyr.Zephyr.Plugin
-import dev.zephyr.util.bukkit.forceMainThread
 import dev.zephyr.util.concurrent.threadLocal
 import dev.zephyr.util.java.catch
 import dev.zephyr.util.kotlin.KotlinOpens
@@ -41,7 +40,7 @@ class BukkitTask(
     override fun execute() {
         TickingTasks.set(this)
         ++executions
-        catch("Error while task executing: $id", Level.WARNING) { action(this) }
+        catch("Error while task executing: ${handle?.taskId ?: "task handle is null"}", Level.WARNING) { action(this) }
         if (repeats in 0..executions) {
             cancel()
         }
@@ -54,7 +53,7 @@ class BukkitTask(
         }
 
         context.tasks.remove(id)
-        catch("Error while processing task termination handler: $id") { terminationHandler(this) }
+        catch("Error while processing task termination handler: ${handle?.taskId ?: "task handle is null"}") { terminationHandler(this) }
     }
 
 }
