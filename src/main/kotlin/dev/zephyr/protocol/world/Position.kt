@@ -46,9 +46,10 @@ value class Position(val key: Long) {
     fun toChunkSectionPosition(world: World) = ChunkPosition(world, clone(y = 0))
 
     operator fun component1() = x
-    operator fun component2() = x
-    operator fun component3() = x
+    operator fun component2() = y
+    operator fun component3() = z
 
+    override fun toString() = "(x: $x,y: $y,z: $z)"
 }
 
 val Chunk.position get() = Position(x, 0, z)

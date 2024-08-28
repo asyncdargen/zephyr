@@ -45,6 +45,7 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
 import java.util.*
 import java.util.Optional.ofNullable
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.jvm.optionals.getOrNull
 
@@ -72,7 +73,7 @@ class ProtocolEntity(
 
     val effects =
         concurrentSetOf<ProtocolEntityEffect>().observe({ it.add(entityId, viewers) }, { it.remove(entityId, viewers) })
-    override val mounts = mutableSetOf<ProtocolEntity>()
+    override val mounts = concurrentSetOf<ProtocolEntity>()
     var vehicle: ProtocolVehicle? = null
 
     val metadata = ObservableMetadata.create(this)
@@ -119,11 +120,9 @@ class ProtocolEntity(
     var location by observable(location) { old, new ->
         if (!worldIsDirty) {
             worldIsDirty = latestWorldSnapshot != new.world
-            latestWorldSnapshot = new.world
         }
         if (!chunkIsDirty && !worldIsDirty) {
             chunkIsDirty = latestChunkSnapshot != new.position.chunk
-            latestChunkSnapshot = new.position.chunk
         }
         spawnLocal()
     }
@@ -420,17 +419,20 @@ class ProtocolEntity(
             }[entityId] = this
         }
         PlayerChunks.PlayersLoadedChunks
-            .asSequence()
-            .filter { location.position.chunk in it.value && !isSpawned(it.key) && !isLoaded(it.key) && hasAccess(it.key) }
-            .forEach { (player, _) ->
-                load(player)
-                spawn(player)
-            }
+            .filter {
+                location.world == it.key.world
+                        && location.position.chunk in it.value
+                        && !isSpawned(it.key)
+                        && !isLoaded(it.key)
+                        && hasAccess(it.key)
+            }.keys
+            .also(::load)
+            .also(::spawn)
     }
 
     fun spawnLocal() {
-        if (isRegistered()) world.players
-            .filter { isLoaded(it) && !isSpawned(it) && hasAccess(it) }
+        if (isRegistered()) loaders
+            .filter { !isSpawned(it) && hasAccess(it) }
             .ifNotEmpty(this::spawn)
     }
 
@@ -443,10 +445,9 @@ class ProtocolEntity(
     }
 
     fun refreshLoaders() {
-        world.players.filter { isLoaded(it) && latestChunkSnapshot !in PlayerChunks[it] }
-            .ifNotEmpty(this::unload)
-        world.players.filter { !isLoaded(it) && latestChunkSnapshot in PlayerChunks[it] }
-            .ifNotEmpty(this::load)
+        val chunk = latestChunkSnapshot
+        loaders.filter { chunk !in PlayerChunks[it] }.ifNotEmpty(this::unload)
+        world.players.filter { !isLoaded(it) && chunk in PlayerChunks[it] }.ifNotEmpty(this::load)
     }
 
     fun hasAccess(player: Player) = accessor(player)

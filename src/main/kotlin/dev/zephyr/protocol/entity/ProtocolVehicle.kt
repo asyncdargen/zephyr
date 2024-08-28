@@ -1,6 +1,7 @@
 package dev.zephyr.protocol.entity
 
 import org.bukkit.entity.Player
+import java.util.concurrent.ConcurrentHashMap
 
 interface ProtocolVehicle {
 

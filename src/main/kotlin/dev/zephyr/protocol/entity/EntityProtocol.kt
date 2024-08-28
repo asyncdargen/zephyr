@@ -45,11 +45,17 @@ object EntityProtocol {
         }
 
         on<PlayerChunkUnloadEvent> {
-            getEntitiesInChunk(chunk)?.forEach { it.unload(player) }
+            getEntitiesInChunk(chunk)?.forEach {
+                it.unload(player)
+                it.destroy(player)
+            }
         }
 
         on<PlayerChangedWorldEvent> {
-            getEntitiesInWorld(from)?.forEach { it.unload(player) }
+            getEntitiesInWorld(from)?.forEach {
+                it.unload(player)
+                it.destroy(player)
+            }
         }
 
         everyAsync(0, 1) {
@@ -88,6 +94,8 @@ object EntityProtocol {
                 .getOrPut(newChunk) { concurrentHashMapOf() }[entityId] = entity
             entity.chunkIsDirty = false
             entity.worldIsDirty = false
+            entity.latestWorldSnapshot = newWorld
+            entity.latestChunkSnapshot = newChunk
             entity.refreshLoaders()
         }
     }

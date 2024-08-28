@@ -9,6 +9,7 @@ import dev.zephyr.util.collection.concurrentSetOf
 import dev.zephyr.util.kotlin.KotlinOpens
 import dev.zephyr.util.kotlin.cast
 import org.bukkit.entity.Player
+import java.util.concurrent.locks.ReentrantLock
 
 @KotlinOpens
 abstract class ProtocolObject {
@@ -44,8 +45,7 @@ abstract class ProtocolObject {
 
     @Synchronized
     fun unload(players: Collection<Player>) {
-        destroy(players)
-        loaders.removeAll(players)
+        loaders.removeAll(players.toSet())
     }
 
     fun unload(vararg players: Player) =
