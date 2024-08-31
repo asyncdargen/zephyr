@@ -97,6 +97,7 @@ abstract class ProtocolObject {
     fun remove() {
         handleRemove()
         destroy(loaders)
+        unload(loaders)
 
         if (hasEventContext) {
             eventContext.close()
